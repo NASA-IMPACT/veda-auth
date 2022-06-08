@@ -1,4 +1,3 @@
-from enum import Enum
 import json
 from typing import Any, Dict, Sequence
 
@@ -109,20 +108,31 @@ class AuthStack(Stack):
         return secret
 
     def add_resource_server(
-        self, resource_id: str, scopes: Dict[str, cognito.ResourceServerScope]
+        self, resource_id: str, supported_scopes: Dict[str, str]
     ) -> Dict[str, cognito.OAuthScope]:
         """
         The resource server represents something that a client would like to be able to
         access. Each scope represents a resource/action granted to an application.
+
+        Args:
+            resource_id: unique identifier for resource server
+            available_scopes: dict mapping scope name to scope description
+
+        Returns:
+            mapping of scope name to OAuth resource server scope.
         """
+        scopes = [
+            cognito.ResourceServerScope(scope_name=name, scope_description=description)
+            for name, description in supported_scopes.items()
+        ]
         resource_server = self.userpool.add_resource_server(
             f"{resource_id}-server",
             identifier=f"{resource_id}-server",
-            scopes=[scope for scope in scopes.values()],
+            scopes=scopes,
         )
         return {
-            scope_name: cognito.OAuthScope.resource_server(resource_server, scope)
-            for scope_name, scope in scopes.items()
+            scope.scope_name: cognito.OAuthScope.resource_server(resource_server, scope)
+            for scope in scopes
         }
 
     def add_programmatic_client(self, service_id: str) -> cognito.UserPoolClient:
