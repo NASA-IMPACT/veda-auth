@@ -1,4 +1,6 @@
+from enum import Enum
 import json
+from typing import Any, Dict, Sequence
 
 from aws_cdk import (
     aws_cognito as cognito,
@@ -16,9 +18,10 @@ class AuthStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
         self.userpool = self._create_userpool()
+        self.domain = self._add_domain(self.userpool)
 
     def _create_userpool(self) -> cognito.UserPool:
-        userpool = cognito.UserPool(
+        return cognito.UserPool(
             self,
             "userpool",
             user_pool_name=Stack.of(self).stack_name,
@@ -31,14 +34,23 @@ class AuthStack(Stack):
             ),
         )
 
-        userpool.add_domain(
+    def _add_domain(self, userpool: cognito.UserPool) -> cognito.UserPoolDomain:
+        """
+        Add a domain to a specified userpool
+        """
+        domain = userpool.add_domain(
             "cognito-domain",
             cognito_domain=cognito.CognitoDomainOptions(
-                domain_prefix="auth-playground"
+                domain_prefix=Stack.of(self).stack_name
             ),
         )
-
-        return userpool
+        CfnOutput(
+            self,
+            "domain-base-url",
+            export_name="userpool-domain-base-url",
+            value=domain.base_url(),
+        )
+        return domain
 
     def _get_client_secret(self, client: cognito.UserPoolClient) -> str:
         # https://github.com/aws/aws-cdk/issues/7225#issuecomment-610299259
@@ -62,79 +74,102 @@ class AuthStack(Stack):
                 resources=cr.AwsCustomResourcePolicy.ANY_RESOURCE,
             ),
         )
-        describe_cognito_user_pool_client.node.add_dependency(client)
-        describe_cognito_user_pool_client.node.add_dependency(self.userpool)
-
         return describe_cognito_user_pool_client.get_response_field(
             "UserPoolClient.ClientSecret"
         )
 
+    def _create_secret(self, service_id: str, secret_dict: Dict[Any, Any]):
+        """
+        Create a secret to represent service credentials.
+        """
+        secret = secretsmanager.Secret(
+            self,
+            f"{service_id}-secret",
+            secret_name=f"{Stack.of(self).stack_name}/{service_id}",
+            # TODO: Should we not do this? Perhaps the client secret should be placed in
+            # a secret in a Lambda custom resource so as to avoid placing the secret in
+            # CloudFormation template.
+            secret_string_value=SecretValue.unsafe_plain_text(json.dumps(secret_dict)),
+        )
+
+        CfnOutput(
+            self,
+            f"{service_id}-secret-output",
+            export_name=f"{service_id}-secret",
+            value=secret.secret_name,
+        )
+        CfnOutput(
+            self,
+            f"{service_id}-secret-arn-output",
+            export_name=f"{service_id}-secret-arn",
+            value=secret.secret_arn,
+        )
+
+        return secret
+
+    def add_resource_server(
+        self, resource_id: str, scopes: Dict[str, cognito.ResourceServerScope]
+    ) -> Dict[str, cognito.OAuthScope]:
+        """
+        The resource server represents something that a client would like to be able to
+        access. Each scope represents a resource/action granted to an application.
+        """
+        resource_server = self.userpool.add_resource_server(
+            f"{resource_id}-server",
+            identifier=f"{resource_id}-server",
+            scopes=[scope for scope in scopes.values()],
+        )
+        return {
+            scope_name: cognito.OAuthScope.resource_server(resource_server, scope)
+            for scope_name, scope in scopes.items()
+        }
+
     def add_programmatic_client(self, service_id: str) -> cognito.UserPoolClient:
         client = self.userpool.add_client(
-            "api-access",
+            service_id,
             auth_flows=cognito.AuthFlow(user_password=True),
             generate_secret=False,
             user_pool_client_name="Programmatic Access",
             disable_o_auth=True,
         )
 
-        CfnOutput(
-            self,
-            "programmatic-client-id",
-            export_name="Programmatic-Client-ID",
-            value=client.user_pool_client_id,
+        self._create_secret(
+            service_id,
+            {
+                "cognito_domain": self.domain.base_url(),
+                "client_id": client.user_pool_client_id,
+            },
         )
 
         return client
 
-    def add_service_client(self, service_id: str) -> cognito.UserPoolClient:
+    def add_service_client(
+        self, service_id: str, scopes: Sequence[cognito.OAuthScope]
+    ) -> cognito.UserPoolClient:
         """
         Adds a client to the user pool that represents a service (ie not individual
         users). Client will utilize the OAuth2 client_credentials flow.
         """
-        service_scope = cognito.ResourceServerScope(
-            scope_name=f"{service_id}",
-            scope_description="Scope indicating that this is a service requesting access.",
-        )
-
-        resource_server = self.userpool.add_resource_server(
-            f"{service_id}-resource-server",
-            identifier=f"{service_id}-server",
-            scopes=[service_scope],
-        )
 
         client = self.userpool.add_client(
             "service-access",
             o_auth=cognito.OAuthSettings(
                 flows=cognito.OAuthFlows(client_credentials=True),
-                scopes=[
-                    cognito.OAuthScope.resource_server(resource_server, service_scope)
-                ],
+                scopes=scopes,
             ),
             generate_secret=True,
             user_pool_client_name=f"{service_id} Service Access",
             disable_o_auth=False,
         )
 
-        secret = secretsmanager.Secret(
-            self,
-            f"{service_id}-secret",
-            secret_name=f"{Stack.of(self).stack_name}/{service_id}/creds",
-            secret_string_value=SecretValue(
-                json.dumps(
-                    {
-                        "client_id": client.user_pool_client_id,
-                        "client_secret": self._get_client_secret(client),
-                    }
-                )
-            ),
-        )
-
-        CfnOutput(
-            self,
-            f"{service_id}-client-secret-arn",
-            export_name=f"{service_id}-secret-arn",
-            value=secret.secret_arn,
+        self._create_secret(
+            service_id,
+            {
+                "cognito_domain": self.domain.base_url(),
+                "client_id": client.user_pool_client_id,
+                "client_secret": self._get_client_secret(client),
+                "scope": " ".join(scope.scope_name for scope in scopes),
+            },
         )
 
         return client
