@@ -17,6 +17,12 @@ class AuthStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
         self.userpool = self._create_userpool()
+        CfnOutput(
+            self,
+            f"userpool_id",
+            export_name=f"userpool_id",
+            value=self.userpool.user_pool_id,
+        )
         self.domain = self._add_domain(self.userpool)
 
     def _create_userpool(self) -> cognito.UserPool:
@@ -55,7 +61,7 @@ class AuthStack(Stack):
         # https://github.com/aws/aws-cdk/issues/7225#issuecomment-610299259
         describe_cognito_user_pool_client = cr.AwsCustomResource(
             self,
-            "DescribeCognitoUserPoolClient",
+            f"describe-{client.to_string()}",
             resource_type="Custom::DescribeCognitoUserPoolClient",
             on_create=cr.AwsSdkCall(
                 region=Stack.of(self).region,
@@ -135,7 +141,9 @@ class AuthStack(Stack):
             for scope in scopes
         }
 
-    def add_programmatic_client(self, service_id: str) -> cognito.UserPoolClient:
+    def add_programmatic_client(
+        self, service_id: str, scopes: Sequence[cognito.OAuthScope]
+    ) -> cognito.UserPoolClient:
         client = self.userpool.add_client(
             service_id,
             auth_flows=cognito.AuthFlow(user_password=True),
@@ -147,6 +155,7 @@ class AuthStack(Stack):
         self._create_secret(
             service_id,
             {
+                "flow": "user_password",
                 "cognito_domain": self.domain.base_url(),
                 "client_id": client.user_pool_client_id,
             },
@@ -176,6 +185,7 @@ class AuthStack(Stack):
         self._create_secret(
             service_id,
             {
+                "flow": "client_credentials",
                 "cognito_domain": self.domain.base_url(),
                 "client_id": client.user_pool_client_id,
                 "client_secret": self._get_client_secret(client),
