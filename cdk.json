@@ -12,7 +12,8 @@
       "**/*.pyc",
       "**/*.tmp",
       "**/__pycache__",
-      "tests"
+      "tests",
+      "scripts"
     ]
   },
   "context": {
