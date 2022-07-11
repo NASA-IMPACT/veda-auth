@@ -25,8 +25,9 @@ stack = AuthStack(
 stac_registry_scopes = stack.add_resource_server(
     "veda-stac-ingestion-registry",
     supported_scopes={
-        "*": "Full Access",
-        "register": "Create STAC ingestions",
+        "stac:register": "Create STAC ingestions",
+        "stac:cancel": "Cancel a STAC ingestion",
+        "stac:list": "Cancel a STAC ingestion",
     },
 )
 
@@ -34,11 +35,23 @@ stac_registry_scopes = stack.add_resource_server(
 # Generate a client for a service, specifying the permissions it will be granted.
 # In this case, we want this client to be able to only register new STAC ingestions in
 # the STAC ingestion registry service.
-stack.add_service_client("veda-workflows", scopes=[stac_registry_scopes["register"]])
+stack.add_service_client(
+    "veda-workflows",
+    scopes=[
+        stac_registry_scopes["stac:register"],
+    ],
+)
 
-# TODO:
 # Programmatic Clients
-# stack.add_programmatic_client("veda-sdk")
+stack.add_programmatic_client(
+    "veda-sdk",
+    scopes=[
+        stac_registry_scopes["stac:register"],
+        stac_registry_scopes["stac:cancel"],
+        stac_registry_scopes["stac:list"],
+    ],
+)
+
 # Frontend Clients
 # stack.add_frontend_client('veda-dashboard')
 
