@@ -1,8 +1,13 @@
 import json
-from typing import Any, Dict, Sequence
+from enum import Enum
+from typing import Any, Dict, Optional, Sequence
+
 
 from aws_cdk import (
+    aws_iam as iam,
     aws_cognito as cognito,
+    aws_cognito_identitypool_alpha as cognito_id_pool,
+    aws_s3 as s3,
     aws_secretsmanager as secretsmanager,
     CfnOutput,
     custom_resources as cr,
@@ -13,17 +18,30 @@ from aws_cdk import (
 from constructs import Construct
 
 
+class BucketPermissions(str, Enum):
+    read_only = "r"
+    read_write = "wr"
+
+
 class AuthStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
         self.userpool = self._create_userpool()
+        self.domain = self._add_domain(self.userpool)
+        self.identitypool = self._create_identity_pool(self.userpool)
+        
         CfnOutput(
             self,
             f"userpool_id",
-            export_name=f"userpool_id",
+            export_name=f"userpoolid",
             value=self.userpool.user_pool_id,
         )
-        self.domain = self._add_domain(self.userpool)
+        CfnOutput(
+            self,
+            f"identitypool_id",
+            export_name=f"identitypoolid",
+            value=self.identitypool.identity_pool_id,
+        )
 
     def _create_userpool(self) -> cognito.UserPool:
         return cognito.UserPool(
@@ -36,6 +54,27 @@ class AuthStack(Stack):
             sign_in_case_sensitive=False,
             standard_attributes=cognito.StandardAttributes(
                 email=cognito.StandardAttribute(required=True)
+            ),
+        )
+
+    def _create_identity_pool(
+        self, userpool: cognito.UserPool
+    ) -> cognito_id_pool.IdentityPool:
+        # TODO: Generate client for userpool that allows USER_PASSWORD_AUTH flow, pass to userpool provider
+        client = self.add_programmatic_client(
+            "cognito-identity-pool-auth-provider",
+            name="Identity Pool Authentication Provider",
+        )
+        return cognito_id_pool.IdentityPool(
+            self,
+            "identity_pool",
+            identity_pool_name=f"{Stack.of(self).stack_name} IdentityPool",
+            authentication_providers=cognito_id_pool.IdentityPoolAuthenticationProviders(
+                user_pools=[
+                    cognito_id_pool.UserPoolAuthenticationProvider(
+                        user_pool=userpool, user_pool_client=client
+                    )
+                ],
             ),
         )
 
@@ -142,13 +181,13 @@ class AuthStack(Stack):
         }
 
     def add_programmatic_client(
-        self, service_id: str, scopes: Sequence[cognito.OAuthScope]
+        self, service_id: str, name: Optional[str] = None
     ) -> cognito.UserPoolClient:
         client = self.userpool.add_client(
             service_id,
             auth_flows=cognito.AuthFlow(user_password=True),
             generate_secret=False,
-            user_pool_client_name="Programmatic Access",
+            user_pool_client_name=name or service_id,
             disable_o_auth=True,
         )
 
@@ -194,3 +233,52 @@ class AuthStack(Stack):
         )
 
         return client
+
+    @property
+    def group_precedence(self):
+        """
+        Auto-incrementing property.
+        """
+        if not hasattr(self, '__group_precedence'):
+            self.__group_precedence = 0
+        self.__group_precedence += 1
+        return self.__group_precedence
+
+    def add_cognito_group(
+        self,
+        group_name: str,
+        description: str,
+        bucket_permissions: Dict[str, BucketPermissions],
+    ) -> cognito.CfnUserPoolGroup:
+
+        role = iam.Role(
+            self,
+            f"{group_name}_role",
+            assumed_by=iam.FederatedPrincipal(
+                federated="cognito-identity.amazonaws.com",
+                conditions={
+                    "StringEquals": {
+                        "cognito-identity.amazonaws.com:aud": f"us-east-2:{self.userpool.user_pool_id}"
+                    }
+                },
+            ),
+        )
+
+        for bucket_name, permission in bucket_permissions.items():
+            bucket = s3.Bucket.from_bucket_name(
+                self, f"{group_name}_{bucket_name}", bucket_name
+            )
+            if permission == BucketPermissions.read_write:
+                bucket.grant_read_write(role)
+            else:
+                bucket.grant_read(role)
+
+        return cognito.CfnUserPoolGroup(
+            self,
+            group_name,
+            user_pool_id=self.userpool.user_pool_id,
+            description=description,
+            group_name=group_name,
+            precedence=self.group_precedence,
+            role_arn=role.role_arn,
+        )

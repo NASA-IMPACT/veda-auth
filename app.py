@@ -3,7 +3,7 @@ import os
 
 import aws_cdk as cdk
 
-from infra.stack import AuthStack
+from infra.stack import AuthStack, BucketPermissions
 from config import Config
 
 config = Config(_env_file=os.environ.get("ENV_FILE", ".env"))
@@ -19,6 +19,41 @@ stack = AuthStack(
         "Stack": config.stage,
     },
 )
+
+# Create Groups
+stack.add_cognito_group(
+    "veda-staging-writers",
+    "Users that have read/write-access to the VEDA store and staging datastore",
+    {
+        "veda-data-store": BucketPermissions.read_write,
+        "veda-data-store-staging": BucketPermissions.read_write,
+    },
+)
+stack.add_cognito_group(
+    "veda-writers",
+    "Users that have read/write-access to the VEDA store",
+    {
+        "veda-data-store": BucketPermissions.read_write,
+    },
+)
+
+stack.add_cognito_group(
+    "veda-staging-readers",
+    "Users that have read-access to the VEDA store and staging data store",
+    {
+        "veda-data-store": BucketPermissions.read_only,
+        "veda-data-store-staging": BucketPermissions.read_only,
+    },
+)
+# TODO: Should this be the default IAM role for the user group?
+stack.add_cognito_group(
+    "veda-readers",
+    "Users that have read-access to the VEDA store",
+    {
+        "veda-data-store": BucketPermissions.read_only,
+    },
+)
+
 
 # Generate a resource server (ie something to protect behind auth) with scopes
 # (permissions that we can grant to users/services).
@@ -43,14 +78,7 @@ stack.add_service_client(
 )
 
 # Programmatic Clients
-stack.add_programmatic_client(
-    "veda-sdk",
-    scopes=[
-        stac_registry_scopes["stac:register"],
-        stac_registry_scopes["stac:cancel"],
-        stac_registry_scopes["stac:list"],
-    ],
-)
+stack.add_programmatic_client("veda-sdk")
 
 # Frontend Clients
 # stack.add_frontend_client('veda-dashboard')
