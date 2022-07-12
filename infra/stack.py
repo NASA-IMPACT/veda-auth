@@ -213,7 +213,7 @@ class AuthStack(Stack):
         """
 
         client = self.userpool.add_client(
-            "service-access",
+            f"{service_id}_client",
             o_auth=cognito.OAuthSettings(
                 flows=cognito.OAuthFlows(client_credentials=True),
                 scopes=scopes,
