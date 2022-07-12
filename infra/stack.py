@@ -256,9 +256,10 @@ class AuthStack(Stack):
             f"{group_name}_role",
             assumed_by=iam.FederatedPrincipal(
                 federated="cognito-identity.amazonaws.com",
+                assume_role_action="sts:AssumeRoleWithWebIdentity",
                 conditions={
                     "StringEquals": {
-                        "cognito-identity.amazonaws.com:aud": f"us-east-2:{self.userpool.user_pool_id}"
+                        "cognito-identity.amazonaws.com:aud": self.identitypool.identity_pool_id
                     }
                 },
             ),
