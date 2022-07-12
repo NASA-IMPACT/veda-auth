@@ -73,6 +73,14 @@ class AuthStack(Stack):
             "cognito-identity-pool-auth-provider",
             name="Identity Pool Authentication Provider",
         )
+
+        CfnOutput(
+            self,
+            f"identitypool_client_id",
+            export_name=f"identitypool-client-id",
+            value=client.user_pool_client_id,
+        )
+
         return cognito_id_pool.IdentityPool(
             self,
             "identity_pool",
