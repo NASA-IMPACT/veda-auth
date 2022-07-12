@@ -29,7 +29,9 @@ class AuthStack(Stack):
         self.userpool = self._create_userpool()
         self.domain = self._add_domain(self.userpool)
         self.identitypool = self._create_identity_pool(self.userpool)
-        
+
+        self._group_precedence = 0
+
         CfnOutput(
             self,
             f"userpool_id",
@@ -239,10 +241,8 @@ class AuthStack(Stack):
         """
         Auto-incrementing property.
         """
-        if not hasattr(self, '__group_precedence'):
-            self.__group_precedence = 0
-        self.__group_precedence += 1
-        return self.__group_precedence
+        self._group_precedence += 1
+        return self._group_precedence
 
     def add_cognito_group(
         self,
