@@ -35,14 +35,20 @@ class AuthStack(Stack):
         CfnOutput(
             self,
             f"userpool_id",
-            export_name=f"userpoolid",
+            export_name=f"userpool-id",
             value=self.userpool.user_pool_id,
         )
         CfnOutput(
             self,
             f"identitypool_id",
-            export_name=f"identitypoolid",
+            export_name=f"identitypool-id",
             value=self.identitypool.identity_pool_id,
+        )
+        CfnOutput(
+            self,
+            f"identitypool_arn",
+            export_name=f"identitypool-arn",
+            value=self.identitypool.identity_pool_arn,
         )
 
     def _create_userpool(self) -> cognito.UserPool:
