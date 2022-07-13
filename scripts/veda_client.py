@@ -48,6 +48,8 @@ class VedaAuthClient(BaseSettings):
     # username can be either email address or sub
     username: str = Field(
         default_factory=lambda: input("Username: "),
+        min_length=1,
+        max_length=128,
     )
     # cognito app client identifier
     client_id: str = Field(
