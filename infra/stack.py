@@ -68,7 +68,6 @@ class AuthStack(Stack):
     def _create_identity_pool(
         self, userpool: cognito.UserPool
     ) -> cognito_id_pool.IdentityPool:
-        # TODO: Generate client for userpool that allows USER_PASSWORD_AUTH flow, pass to userpool provider
         client = self.add_programmatic_client(
             "cognito-identity-pool-auth-provider",
             name="Identity Pool Authentication Provider",
@@ -81,17 +80,30 @@ class AuthStack(Stack):
             value=client.user_pool_client_id,
         )
 
+        userpool_provider = cognito_id_pool.UserPoolAuthenticationProvider(
+            user_pool=userpool,
+            user_pool_client=client,
+        )
+
         return cognito_id_pool.IdentityPool(
             self,
             "identity_pool",
             identity_pool_name=f"{Stack.of(self).stack_name} IdentityPool",
             authentication_providers=cognito_id_pool.IdentityPoolAuthenticationProviders(
                 user_pools=[
-                    cognito_id_pool.UserPoolAuthenticationProvider(
-                        user_pool=userpool, user_pool_client=client
-                    )
+                    userpool_provider,
                 ],
             ),
+            role_mappings=[
+                cognito_id_pool.IdentityPoolRoleMapping(
+                    provider_url=cognito_id_pool.IdentityPoolProviderUrl.user_pool(
+                        # HACK: Need to manually provide this as per:
+                        # https://github.com/aws/aws-cdk/issues/19222
+                        f"cognito-idp.us-west-2.amazonaws.com/us-west-2_OJVQQhBQQ:40b2chbsilikn0i36po0q0fpk"
+                    ),
+                    use_token=True,
+                )
+            ],
         )
 
     def _add_domain(self, userpool: cognito.UserPool) -> cognito.UserPoolDomain:
