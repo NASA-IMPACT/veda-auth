@@ -16,7 +16,7 @@ from pygments import highlight
 from pygments.lexers import JsonLexer, PythonLexer
 from pygments.formatters import TerminalFormatter
 
-from veda_client import VedaAuthClient
+from cognito_client import CognitoAuthClient
 
 
 # Allow user to skip prompts
@@ -91,9 +91,10 @@ if __name__ == "__main__":
     print_code(
         """
         # Setup client (get configuration)
-        client = VedaAuthClient()"""
+        client = CognitoAuthClient()
+        """
     )
-    client = VedaAuthClient()
+    client = CognitoAuthClient()
 
     print_code(
         """

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-The represents how a user can authenticate with a Cogntio application
-within an interactive Python environment (e.g. Python Notebook)
+A client to smooth over process of common authentication scenarios
+using AWS Cognito. Intended to be used within an interactive terminal 
+environment (e.g. Python Notebook, CLI).
 """
 
 from enum import Enum
@@ -44,7 +45,7 @@ class AuthFailure(Exception):
     ...
 
 
-class VedaAuthClient(BaseSettings):
+class CognitoAuthClient(BaseSettings):
     # username can be either email address or sub
     username: str = Field(
         default_factory=lambda: input("Username: "),
