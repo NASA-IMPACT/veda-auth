@@ -4,6 +4,23 @@ This codebase represents the Cognito-based authentication system used for the VE
 
 Note: This is for setting up the user pools and managing applications, it is _not_ for managing users. Managing users should be instead done via AWS
 
+## Running the client
+
+First you need to setup the client with the settings for the Cognito User Pool of interest.
+
+```bash
+cp .env.sh.example .env.sh
+# Update the values in .env.sh
+source ./.env.sh
+```
+
+Assuming you already have a username and password associated with the Cognito User Pool of interest, you can run the client to generate tokens and AWS credentials:
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 scripts/tmp-creds-example.py
+```
+
 ## Expanding
 
 The codebase intends to be expandable to meet VEDA's needs as the project grows. Currently, the stack exposes two methods to facilitate customization.
