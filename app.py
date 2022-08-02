@@ -25,6 +25,7 @@ stack.add_cognito_group(
     "veda-staging-writers",
     "Users that have read/write-access to the VEDA store and staging datastore",
     {
+        "veda-data-store-dev": BucketPermissions.read_write,
         "veda-data-store": BucketPermissions.read_write,
         "veda-data-store-staging": BucketPermissions.read_write,
     },
@@ -33,6 +34,7 @@ stack.add_cognito_group(
     "veda-writers",
     "Users that have read/write-access to the VEDA store",
     {
+        "veda-data-store-dev": BucketPermissions.read_write,
         "veda-data-store": BucketPermissions.read_write,
     },
 )
@@ -41,6 +43,7 @@ stack.add_cognito_group(
     "veda-staging-readers",
     "Users that have read-access to the VEDA store and staging data store",
     {
+        "veda-data-store-dev": BucketPermissions.read_only,
         "veda-data-store": BucketPermissions.read_only,
         "veda-data-store-staging": BucketPermissions.read_only,
     },
