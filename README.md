@@ -9,9 +9,7 @@ Note: This is for setting up the user pools and managing applications, it is _no
 First you need to setup the client with the settings for the Cognito User Pool of interest.
 
 ```bash
-cp .env.sh.example .env.sh
-# Update the values in .env.sh
-source ./.env.sh
+cp env.example .env
 ```
 
 Assuming you already have a username and password associated with the Cognito User Pool of interest, you can run the client to generate tokens and AWS credentials:
