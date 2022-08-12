@@ -16,6 +16,7 @@ from aws_cdk import (
     Stack,
 )
 from constructs import Construct
+from platformdirs import user_log_path
 
 
 class BucketPermissions(str, Enum):
@@ -90,18 +91,15 @@ class AuthStack(Stack):
             "identity_pool",
             identity_pool_name=f"{Stack.of(self).stack_name} IdentityPool",
             authentication_providers=cognito_id_pool.IdentityPoolAuthenticationProviders(
-                user_pools=[
-                    userpool_provider,
-                ],
+                user_pools=[userpool_provider],
             ),
             role_mappings=[
                 cognito_id_pool.IdentityPoolRoleMapping(
                     provider_url=cognito_id_pool.IdentityPoolProviderUrl.user_pool(
-                        # HACK: Need to manually provide this as per:
-                        # https://github.com/aws/aws-cdk/issues/19222
-                        f"cognito-idp.us-west-2.amazonaws.com/us-west-2_OJVQQhBQQ:40b2chbsilikn0i36po0q0fpk"
+                        f"cognito-idp.{Stack.of(userpool).region}.{Stack.of(userpool).url_suffix}/{userpool.user_pool_id}:{client.user_pool_client_id}"
                     ),
                     use_token=True,
+                    mapping_key="userpool",
                 )
             ],
         )
@@ -216,7 +214,7 @@ class AuthStack(Stack):
             auth_flows=cognito.AuthFlow(user_password=True),
             generate_secret=False,
             user_pool_client_name=name or service_id,
-            disable_o_auth=True,
+            # disable_o_auth=True,
         )
 
         self._create_secret(
