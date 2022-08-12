@@ -4,13 +4,13 @@ This codebase represents the Cognito-based authentication system used for the VE
 
 Note: This is for setting up the user pools and managing applications, it is _not_ for managing users. Managing users should be instead done via AWS
 
-## Running the client
+## Running the example client
 
-First you need to setup the client with the settings for the Cognito user pool of interest.
+The example client requires the following configuration to be available via environment variables or in a `.env` file:
 
-```bash
-cp env.example .env
-```
+- `IDENTITY_POOL_ID`, the ID of the Cognito identity pool, e.g. `us-west-2:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+- `USER_POOL_ID`, the ID of Cognito user pool, e.g. `us-west-2_XXXXXXXXX`
+- `CLIENT_ID`, the ID of the Cognito client, e.g. `XXXxxxxxxxxxxxxxxxxxxxXXXX`
 
 Assuming you already have a username and password associated with the Cognito user pool of interest, you can run the client to generate tokens and AWS credentials:
 
