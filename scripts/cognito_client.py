@@ -206,3 +206,12 @@ class CognitoAuthClient(BaseSettings):
             IdentityId=identity_id,
             Logins=logins,
         )["Credentials"]
+
+
+if __name__ == "__main__":
+    """
+    Running this directly will simply log in a user and return their token.
+    """
+    client = CognitoAuthClient()
+    client.login()
+    print(client.access_token)
