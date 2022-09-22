@@ -16,7 +16,6 @@ from aws_cdk import (
     Stack,
 )
 from constructs import Construct
-from platformdirs import user_log_path
 
 
 class BucketPermissions(str, Enum):
@@ -29,30 +28,45 @@ class AuthStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
         self.userpool = self._create_userpool()
         self.domain = self._add_domain(self.userpool)
-        self.identitypool = self._create_identity_pool(self.userpool)
+        auth_provider_client = self.add_programmatic_client(
+            "cognito-identity-pool-auth-provider",
+            name="Identity Pool Authentication Provider",
+        )
+        self.identitypool = self._create_identity_pool(
+            userpool=self.userpool,
+            auth_provider_client=auth_provider_client,
+        )
 
         self._group_precedence = 0
 
+        stack_name = Stack.of(self).stack_name
         CfnOutput(
             self,
-            f"userpool_id",
-            export_name=f"userpool-id",
+            "userpool_id",
+            export_name=f"{stack_name}-userpool-id",
             value=self.userpool.user_pool_id,
         )
         CfnOutput(
             self,
-            f"identitypool_id",
-            export_name=f"identitypool-id",
+            "identitypool_id",
+            export_name=f"{stack_name}-identitypool-id",
             value=self.identitypool.identity_pool_id,
         )
         CfnOutput(
             self,
-            f"identitypool_arn",
-            export_name=f"identitypool-arn",
+            "identitypool_arn",
+            export_name=f"{stack_name}-identitypool-arn",
             value=self.identitypool.identity_pool_arn,
+        )
+        CfnOutput(
+            self,
+            f"identitypool_client_id",
+            export_name=f"{stack_name}-client-id",
+            value=auth_provider_client.user_pool_client_id,
         )
 
     def _create_userpool(self) -> cognito.UserPool:
+
         return cognito.UserPool(
             self,
             "userpool",
@@ -67,36 +81,29 @@ class AuthStack(Stack):
         )
 
     def _create_identity_pool(
-        self, userpool: cognito.UserPool
+        self,
+        userpool: cognito.UserPool,
+        auth_provider_client: cognito.UserPoolClient,
     ) -> cognito_id_pool.IdentityPool:
-        client = self.add_programmatic_client(
-            "cognito-identity-pool-auth-provider",
-            name="Identity Pool Authentication Provider",
-        )
-
-        CfnOutput(
-            self,
-            f"identitypool_client_id",
-            export_name=f"identitypool-client-id",
-            value=client.user_pool_client_id,
-        )
 
         userpool_provider = cognito_id_pool.UserPoolAuthenticationProvider(
             user_pool=userpool,
-            user_pool_client=client,
+            user_pool_client=auth_provider_client,
         )
+
+        stack = Stack.of(self)
 
         return cognito_id_pool.IdentityPool(
             self,
             "identity_pool",
-            identity_pool_name=f"{Stack.of(self).stack_name} IdentityPool",
+            identity_pool_name=f"{stack.stack_name} IdentityPool",
             authentication_providers=cognito_id_pool.IdentityPoolAuthenticationProviders(
                 user_pools=[userpool_provider],
             ),
             role_mappings=[
                 cognito_id_pool.IdentityPoolRoleMapping(
                     provider_url=cognito_id_pool.IdentityPoolProviderUrl.user_pool(
-                        f"cognito-idp.{Stack.of(userpool).region}.{Stack.of(userpool).url_suffix}/{userpool.user_pool_id}:{client.user_pool_client_id}"
+                        f"cognito-idp.{stack.region}.{stack.url_suffix}/{userpool.user_pool_id}:{auth_provider_client.user_pool_client_id}"
                     ),
                     use_token=True,
                     mapping_key="userpool",
@@ -108,22 +115,28 @@ class AuthStack(Stack):
         """
         Add a domain to a specified userpool
         """
+
+        stack_name = Stack.of(self).stack_name
+
         domain = userpool.add_domain(
             "cognito-domain",
-            cognito_domain=cognito.CognitoDomainOptions(
-                domain_prefix=Stack.of(self).stack_name
-            ),
+            cognito_domain=cognito.CognitoDomainOptions(domain_prefix=stack_name),
         )
+
         CfnOutput(
             self,
             "domain-base-url",
-            export_name="userpool-domain-base-url",
+            export_name=f"{stack_name}-userpool-domain-base-url",
             value=domain.base_url(),
         )
+
         return domain
 
-    def _get_client_secret(self, client: cognito.UserPoolClient) -> str:
-        # https://github.com/aws/aws-cdk/issues/7225#issuecomment-610299259
+    def _get_client_secret(
+        self,
+        client: cognito.UserPoolClient,
+    ) -> str:
+
         describe_cognito_user_pool_client = cr.AwsCustomResource(
             self,
             f"describe-{client.to_string()}",
@@ -144,18 +157,26 @@ class AuthStack(Stack):
                 resources=cr.AwsCustomResourcePolicy.ANY_RESOURCE,
             ),
         )
+
         return describe_cognito_user_pool_client.get_response_field(
             "UserPoolClient.ClientSecret"
         )
 
-    def _create_secret(self, service_id: str, secret_dict: Dict[Any, Any]):
+    def _create_secret(
+        self,
+        service_id: str,
+        secret_dict: Dict[Any, Any],
+    ):
         """
         Create a secret to represent service credentials.
         """
+
+        stack_name = Stack.of(self).stack_name
+
         secret = secretsmanager.Secret(
             self,
             f"{service_id}-secret",
-            secret_name=f"{Stack.of(self).stack_name}/{service_id}",
+            secret_name=f"{stack_name}/{service_id}",
             description="Client secret, created by VEDA Auth CDK.",
             # TODO: Should we not do this? Perhaps the client secret should be placed in
             # a secret in a Lambda custom resource so as to avoid placing the secret in
@@ -166,20 +187,22 @@ class AuthStack(Stack):
         CfnOutput(
             self,
             f"{service_id}-secret-output",
-            export_name=f"{service_id}-secret",
+            export_name=f"{stack_name}-{service_id}-secret",
             value=secret.secret_name,
         )
         CfnOutput(
             self,
             f"{service_id}-secret-arn-output",
-            export_name=f"{service_id}-secret-arn",
+            export_name=f"{stack_name}-{service_id}-secret-arn",
             value=secret.secret_arn,
         )
 
         return secret
 
     def add_resource_server(
-        self, resource_id: str, supported_scopes: Dict[str, str]
+        self,
+        resource_id: str,
+        supported_scopes: Dict[str, str],
     ) -> Dict[str, cognito.OAuthScope]:
         """
         The resource server represents something that a client would like to be able to
@@ -192,23 +215,29 @@ class AuthStack(Stack):
         Returns:
             mapping of scope name to OAuth resource server scope.
         """
+
         scopes = [
             cognito.ResourceServerScope(scope_name=name, scope_description=description)
             for name, description in supported_scopes.items()
         ]
+
         resource_server = self.userpool.add_resource_server(
             f"{resource_id}-server",
             identifier=f"{resource_id}-server",
             scopes=scopes,
         )
+
         return {
             scope.scope_name: cognito.OAuthScope.resource_server(resource_server, scope)
             for scope in scopes
         }
 
     def add_programmatic_client(
-        self, service_id: str, name: Optional[str] = None
+        self,
+        service_id: str,
+        name: Optional[str] = None,
     ) -> cognito.UserPoolClient:
+
         client = self.userpool.add_client(
             service_id,
             auth_flows=cognito.AuthFlow(user_password=True),
@@ -229,7 +258,9 @@ class AuthStack(Stack):
         return client
 
     def add_service_client(
-        self, service_id: str, scopes: Sequence[cognito.OAuthScope]
+        self,
+        service_id: str,
+        scopes: Sequence[cognito.OAuthScope],
     ) -> cognito.UserPoolClient:
         """
         Adds a client to the user pool that represents a service (ie not individual
@@ -265,7 +296,9 @@ class AuthStack(Stack):
         """
         Auto-incrementing property.
         """
+
         self._group_precedence += 1
+
         return self._group_precedence
 
     def add_cognito_group(
