@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 import getpass
 import json
+from typing import TYPE_CHECKING
 
 import boto3
 import click
 import pydantic
 import requests
+
+
+if TYPE_CHECKING:
+    from mypy_boto3_cognito_idp.client import CognitoIdentityProviderClient
+    from mypy_boto3_cognito_identity.client import CognitoIdentityClient
+    from mypy_boto3_cognito_idp.type_defs import InitiateAuthResponseTypeDef
 
 
 class Config(pydantic.BaseModel):
@@ -21,14 +28,18 @@ class Creds(pydantic.BaseModel):
     token_type: str
 
 
-def get_credentials(config: Config) -> Creds:
+def get_token(config: Config) -> Creds:
     response = requests.post(
         f"{config.cognito_domain}/oauth2/token",
         headers={
             "Content-Type": "application/x-www-form-urlencoded",
         },
         auth=(config.client_id, config.client_secret),
-        data={"grant_type": "client_credentials", "scope": config.scope},
+        data={
+            "grant_type": "client_credentials",
+            # A space-separated list of scopes to request for the generated access token.
+            "scope": config.scope,
+        },
     )
     try:
         response.raise_for_status()
@@ -61,7 +72,7 @@ def get_cognito_service_details(stack_name: str, service_id: str) -> Config:
     default="veda-auth-stack",
 )
 @click.option("--service-id", prompt="Service", help="Service that needs token.")
-def get_veda_service_config(
+def get_token_via_client_credentials_flow(
     stage: str, service_id: str, stack_name_base: str = "veda-auth-stack"
 ) -> Config:
     """
@@ -71,9 +82,9 @@ def get_veda_service_config(
     cognito_details = get_cognito_service_details(
         f"{stack_name_base}-{stage}", service_id
     )
-    credentials = get_credentials(cognito_details)
+    credentials = get_token(cognito_details)
     click.echo(credentials.json())
 
 
 if __name__ == "__main__":
-    get_veda_service_config()
+    get_token_via_client_credentials_flow()
