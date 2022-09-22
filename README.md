@@ -23,6 +23,10 @@ python3 scripts/tmp-creds-example.py
 
 The codebase intends to be expandable to meet VEDA's needs as the project grows. Currently, the stack exposes two methods to facilitate customization.
 
+### Adding a Resource Server
+
+A resource server is a service that is to be protected by auth.
+
 ### `stack.add_programmatic_client(client_identifier)`
 
 ### `stack.add_service_client(client_identifier)`
