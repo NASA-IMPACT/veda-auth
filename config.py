@@ -24,3 +24,7 @@ class Config(pydantic.BaseSettings):
         ),
         default_factory=getuser,
     )
+    data_managers_role_arn: str = pydantic.Field(
+        None,
+        description="ARN of role to be assumed by authenticated users in data managers group.",
+    )

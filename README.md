@@ -38,3 +38,43 @@ Add a service that will be authenticating with the VEDA system. This utilizes th
 Calling `.add_service_client()` with a unique identifier will create a [user pool app client](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html?icmpid=docs_cognito_console_help_panel) to represent this service. Credentials for the generated app client will be stored in an AWS SecretsManager Secret with an ID following the format of `{veda_auth_stack_name}/{service_identifier}`. These credentials can be retrieved by the related service and used to request an access token to be used to access any API that requires a valid auth token.
 
 A demonstration of how these credentials can be retrieve and used to generate a JWT for a service, see `scripts/get-service-token.py`
+
+## Using an existing role for authenticated user group
+User groups with pre defined roles can be creating by providing the existing role's ARN. 
+1. Set `DATA_MANAGERS_ROLE_ARN` in environment configuration
+2. CDK deploy change and note `veda-auth-stack-<STAGE>.userpoolid` in output. It will include the deployment region and a UUID, for example `us-west-2:11111111-1111-1111-1111-111111111111`
+3. Add a new statement to the role's trust policy in the AWS IAM console. Navigate to the desired role, choose `Trust Relationship` and select `edit`--be careful to preserve the existing trust statements when appending a new statement for this identity pool.
+
+### Example trust policy with appended statement for identity pool
+In this example, the second object conditionally allows authenticated users from this identity pool to assume the role with a web identity. Two conditions should be applied: `StringEquals` to restrict the statement to this identity pool and `ForAnyValue:StringLike` to restrict to authenticated users.
+
+The identity pool id is returned in the cloud formation output when this project is deployed. It can also be found in the AWS console by navigating to Cognito>Federated Identities, selecting the desired identity pool, and choosing 'Edit identity pool' to reveal the id.
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "lambda.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+                "StringEquals": {
+                    "cognito-identity.amazonaws.com:aud": "us-west-2:11111111-1111-1111-1111-111111111111"
+                },
+                "ForAnyValue:StringLike": {
+                    "cognito-identity.amazonaws.com:amr": "authenticated"
+                }
+            }
+        }
+    ]
+}
+```

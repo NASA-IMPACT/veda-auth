@@ -340,3 +340,29 @@ class AuthStack(Stack):
             precedence=self.group_precedence,
             role_arn=role.role_arn,
         )
+    
+    def add_cognito_group_with_existing_role(
+        self,
+        group_name: str,
+        description: str,
+        role_arn: str,
+    ) -> cognito.CfnUserPoolGroup:
+        """A method to create a user pool group with a pre-existing IAM role for authenticated users
+
+        Args:
+            group_name (str): Name to use for cognito user group
+            description (str): Additional user group description
+            role_arn (str): ARN of the in-account IAM role to be assumed by authenticated users in group
+
+        Returns:
+            cognito.CfnUserPoolGroup
+        """
+        return cognito.CfnUserPoolGroup(
+            self,
+            group_name,
+            user_pool_id=self.userpool.user_pool_id,
+            description=description,
+            group_name=group_name,
+            precedence=self.group_precedence,
+            role_arn=role_arn,
+        )
