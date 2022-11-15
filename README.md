@@ -38,3 +38,7 @@ Add a service that will be authenticating with the VEDA system. This utilizes th
 Calling `.add_service_client()` with a unique identifier will create a [user pool app client](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html?icmpid=docs_cognito_console_help_panel) to represent this service. Credentials for the generated app client will be stored in an AWS SecretsManager Secret with an ID following the format of `{veda_auth_stack_name}/{service_identifier}`. These credentials can be retrieved by the related service and used to request an access token to be used to access any API that requires a valid auth token.
 
 A demonstration of how these credentials can be retrieve and used to generate a JWT for a service, see `scripts/get-service-token.py`
+
+# License
+This project is licensed under **Apache 2**, see the [LICENSE](LICENSE) file for more details.
+
