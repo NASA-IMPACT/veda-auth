@@ -78,3 +78,9 @@ The identity pool id is returned in the cloud formation output when this project
     ]
 }
 ```
+
+## Obtaining AWS credentials
+This project supplies a sample python [cognito-client](scripts/cognito_client.py) for using the veda-auth stack. The [temporary credentials notebook](scripts/temporary-credentials-example.ipynb) demonstrates how to use the deployed veda-auth stack to obtain AWS credentials via a password authentication flow.
+
+### [PyPI cognito_client](https://pypi.org/project/cognito-client/)
+A streamlined version of the client can be installed with `pip install cognito_client`, see usage instructions [here](https://github.com/developmentseed/cognito_client#use).
