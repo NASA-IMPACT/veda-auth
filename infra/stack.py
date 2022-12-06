@@ -372,7 +372,7 @@ class AuthStack(Stack):
         role_arn: str,
     ) -> cognito.CfnUserPoolGroup:
 
-        # Add identity pool to trust policy of role to be assumed by authenticated users in this group
+        # Add identity pool to trust policy of authenticated users role
         self._grant_authenticated_role_principal(role_arn=role_arn)
 
         return cognito.CfnUserPoolGroup(
