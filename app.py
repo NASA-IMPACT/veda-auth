@@ -20,6 +20,14 @@ stack = AuthStack(
     },
 )
 
+# Create a data managers group in user pool if data managers role is provided
+if data_managers_role_arn := config.data_managers_role_arn:
+    stack.add_cognito_group_with_existing_role(
+        "veda-data-store-managers",
+        "Authenticated users assume read write veda data access role",
+        role_arn=data_managers_role_arn
+    )
+
 # Create Groups
 stack.add_cognito_group(
     "veda-staging-writers",
@@ -56,15 +64,6 @@ stack.add_cognito_group(
         "veda-data-store": BucketPermissions.read_only,
     },
 )
-
-# Create a data managers group in user pool if data managers role is provided
-if data_managers_role_arn := config.data_managers_role_arn:
-    stack.add_cognito_group_with_existing_role(
-        "veda-data-store-managers",
-        "Authenticated users assume read write veda data access role",
-        role_arn=data_managers_role_arn
-    )
-
 
 # Generate a resource server (ie something to protect behind auth) with scopes
 # (permissions that we can grant to users/services).
