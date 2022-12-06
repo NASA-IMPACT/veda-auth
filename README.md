@@ -84,3 +84,7 @@ This project supplies a sample python [cognito-client](scripts/cognito_client.py
 
 ### [PyPI cognito_client](https://pypi.org/project/cognito-client/)
 A streamlined version of the client can be installed with `pip install cognito_client`, see usage instructions [here](https://github.com/developmentseed/cognito_client#use).
+
+# License
+This project is licensed under **Apache 2**, see the [LICENSE](LICENSE) file for more details.
+
