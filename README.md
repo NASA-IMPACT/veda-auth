@@ -39,6 +39,52 @@ Calling `.add_service_client()` with a unique identifier will create a [user poo
 
 A demonstration of how these credentials can be retrieve and used to generate a JWT for a service, see `scripts/get-service-token.py`
 
+## Using an existing role for authenticated user group
+User groups with pre defined roles can be creating by providing the existing role's ARN. 
+1. Set `DATA_MANAGERS_ROLE_ARN` in environment configuration
+2. CDK deploy change and note `veda-auth-stack-<STAGE>.userpoolid` in output. It will include the deployment region and a UUID, for example `us-west-2:11111111-1111-1111-1111-111111111111`
+3. Add a new statement to the role's trust policy in the AWS IAM console. Navigate to the desired role, choose `Trust Relationship` and select `edit`--be careful to preserve the existing trust statements when appending a new statement for this identity pool.
+
+### Example trust policy with appended statement for identity pool
+In this example, the second object conditionally allows authenticated users from this identity pool to assume the role with a web identity. Two conditions should be applied: `StringEquals` to restrict the statement to this identity pool and `ForAnyValue:StringLike` to restrict to authenticated users.
+
+The identity pool id is returned in the cloud formation output when this project is deployed. It can also be found in the AWS console by navigating to Cognito>Federated Identities, selecting the desired identity pool, and choosing 'Edit identity pool' to reveal the id.
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "lambda.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+                "StringEquals": {
+                    "cognito-identity.amazonaws.com:aud": "us-west-2:11111111-1111-1111-1111-111111111111"
+                },
+                "ForAnyValue:StringLike": {
+                    "cognito-identity.amazonaws.com:amr": "authenticated"
+                }
+            }
+        }
+    ]
+}
+```
+
+## Obtaining AWS credentials
+This project supplies a sample python [cognito-client](scripts/cognito_client.py) for using the veda-auth stack. The [temporary credentials notebook](scripts/temporary-credentials-example.ipynb) demonstrates how to use the deployed veda-auth stack to obtain AWS credentials via a password authentication flow.
+
+### [PyPI cognito_client](https://pypi.org/project/cognito-client/)
+A streamlined version of the client can be installed with `pip install cognito_client`, see usage instructions [here](https://github.com/developmentseed/cognito_client#use).
+
 # License
 This project is licensed under **Apache 2**, see the [LICENSE](LICENSE) file for more details.
 

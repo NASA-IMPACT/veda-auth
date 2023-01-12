@@ -60,9 +60,15 @@ class AuthStack(Stack):
         )
         CfnOutput(
             self,
-            f"identitypool_client_id",
+            "identitypool_client_id",
             export_name=f"{stack_name}-client-id",
             value=auth_provider_client.user_pool_client_id,
+        )
+        CfnOutput(
+            self,
+            "identitypool_data_managers_role_arn",
+            export_name=f"{stack_name}-data-managers-role-arn",
+            value=self.identitypool.authenticated_role.role_arn,
         )
 
     def _create_userpool(self) -> cognito.UserPool:
@@ -109,6 +115,24 @@ class AuthStack(Stack):
                     mapping_key="userpool",
                 )
             ],
+        )
+
+    def _grant_authenticated_role_principal(self, role_arn: str) -> None:
+        """Allow authenticated users from an authorized group to assume a role in the role's trust policy
+
+        Args:
+            role_arn (str): ARN of IAM role to be assumed by an authenticated user from an authorized group
+        """
+        
+        role = iam.Role.from_role_arn(
+            self,
+            "authenticated-role",
+            role_arn=role_arn,
+        )
+
+        role.grant(
+            self.identitypool.authenticated_role.grant_principal ,
+            "sts:AssumeRoleWithWebIdentity"
         )
 
     def _add_domain(self, userpool: cognito.UserPool) -> cognito.UserPoolDomain:
@@ -339,4 +363,24 @@ class AuthStack(Stack):
             group_name=group_name,
             precedence=self.group_precedence,
             role_arn=role.role_arn,
+        )
+
+    def add_cognito_group_with_existing_role(
+        self,
+        group_name: str,
+        description: str,
+        role_arn: str,
+    ) -> cognito.CfnUserPoolGroup:
+
+        # Add identity pool to trust policy of authenticated users role
+        self._grant_authenticated_role_principal(role_arn=role_arn)
+
+        return cognito.CfnUserPoolGroup(
+            self,
+            group_name,
+            user_pool_id=self.userpool.user_pool_id,
+            description=description,
+            group_name=group_name,
+            precedence=self.group_precedence,
+            role_arn=role_arn,
         )
