@@ -264,7 +264,7 @@ class AuthStack(Stack):
 
         client = self.userpool.add_client(
             service_id,
-            auth_flows=cognito.AuthFlow(user_password=True),
+            auth_flows=cognito.AuthFlow(user_password=True, admin_user_password=True),
             generate_secret=False,
             user_pool_client_name=name or service_id,
             # disable_o_auth=True,
