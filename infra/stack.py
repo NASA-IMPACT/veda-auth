@@ -2,19 +2,13 @@ import json
 from enum import Enum
 from typing import Any, Dict, Optional, Sequence
 
-
-from aws_cdk import (
-    aws_iam as iam,
-    aws_cognito as cognito,
-    aws_cognito_identitypool_alpha as cognito_id_pool,
-    aws_s3 as s3,
-    aws_secretsmanager as secretsmanager,
-    CfnOutput,
-    custom_resources as cr,
-    RemovalPolicy,
-    SecretValue,
-    Stack,
-)
+from aws_cdk import CfnOutput, RemovalPolicy, SecretValue, Stack
+from aws_cdk import aws_cognito as cognito
+from aws_cdk import aws_cognito_identitypool_alpha as cognito_id_pool
+from aws_cdk import aws_iam as iam
+from aws_cdk import aws_s3 as s3
+from aws_cdk import aws_secretsmanager as secretsmanager
+from aws_cdk import custom_resources as cr
 from constructs import Construct
 
 
@@ -26,6 +20,7 @@ class BucketPermissions(str, Enum):
 class AuthStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
         self.userpool = self._create_userpool()
         self.domain = self._add_domain(self.userpool)
         auth_provider_client = self.add_programmatic_client(
@@ -109,7 +104,8 @@ class AuthStack(Stack):
             role_mappings=[
                 cognito_id_pool.IdentityPoolRoleMapping(
                     provider_url=cognito_id_pool.IdentityPoolProviderUrl.user_pool(
-                        f"cognito-idp.{stack.region}.{stack.url_suffix}/{userpool.user_pool_id}:{auth_provider_client.user_pool_client_id}"
+                        f"cognito-idp.{stack.region}.{stack.url_suffix}/"
+                        f"{userpool.user_pool_id}:{auth_provider_client.user_pool_client_id}"
                     ),
                     use_token=True,
                     mapping_key="userpool",
@@ -123,7 +119,7 @@ class AuthStack(Stack):
         Args:
             role_arn (str): ARN of IAM role to be assumed by an authenticated user from an authorized group
         """
-        
+
         role = iam.Role.from_role_arn(
             self,
             "authenticated-role",
@@ -131,8 +127,8 @@ class AuthStack(Stack):
         )
 
         role.grant(
-            self.identitypool.authenticated_role.grant_principal ,
-            "sts:AssumeRoleWithWebIdentity"
+            self.identitypool.authenticated_role.grant_principal,
+            "sts:AssumeRoleWithWebIdentity",
         )
 
     def _add_domain(self, userpool: cognito.UserPool) -> cognito.UserPoolDomain:
@@ -222,6 +218,46 @@ class AuthStack(Stack):
         )
 
         return secret
+
+    def add_oidc_provider(
+        self,
+        provider_name: str,
+        oidc_domain: str,
+        oidc_thumbprint: str,
+    ) -> iam.OpenIdConnectProvider:
+
+        # OIDC providers are unique per account/url pair. If the provider already exists,
+        # we can just reuse it. Otherwise, we need to create it.
+
+        # get account id being used
+        account_id = Stack.of(self).account
+        # constuct arn for oidc provider
+        oidc_provider_arn = f"arn:aws:iam::{account_id}:oidc-provider/{oidc_domain}"
+        # try to find existing provider in account
+
+        CfnOutput(
+            self,
+            "oidc-provider-arn",
+            export_name=f"{Stack.of(self).stack_name}-oidc-provider-arn",
+            value=oidc_provider_arn,
+        )
+
+        try:
+            oidc_provider = iam.OpenIdConnectProvider.from_open_id_connect_provider_arn(
+                self,
+                "oidc-provider",
+                oidc_provider_arn,
+            )
+            return oidc_provider
+        except ValueError:
+            # create new provider if not found
+            return iam.OpenIdConnectProvider(
+                self,
+                provider_name,
+                url=f"https://{oidc_domain}",
+                client_ids=["sts.amazonaws.com"],  # role assumption client
+                thumbprints=[oidc_thumbprint],
+            )
 
     def add_resource_server(
         self,

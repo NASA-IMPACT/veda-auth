@@ -28,3 +28,13 @@ class Config(pydantic.BaseSettings):
         None,
         description="ARN of role to be assumed by authenticated users in data managers group.",
     )
+
+    oidc_provider_url: str = pydantic.Field(
+        "token.actions.githubusercontent.com",
+        description="URL of OIDC provider to use for CI workers.",
+    )
+
+    oidc_thumbprint: str = pydantic.Field(
+        "6938fd4d98bab03faadb97b34396831e3780aea1",
+        description="Thumbprint of OIDC provider to use for CI workers.",
+    )
