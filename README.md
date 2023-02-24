@@ -45,6 +45,9 @@ User groups with pre defined roles can be creating by providing the existing rol
 2. CDK deploy change and note `veda-auth-stack-<STAGE>.userpoolid` in output. It will include the deployment region and a UUID, for example `us-west-2:11111111-1111-1111-1111-111111111111`
 3. Add a new statement to the role's trust policy in the AWS IAM console. Navigate to the desired role, choose `Trust Relationship` and select `edit`--be careful to preserve the existing trust statements when appending a new statement for this identity pool.
 
+## Using an OIDC provider
+To additionally deploy an OIDC provider (or use an existing one in the same account), set `OIDC_PROVIDER_URL` and `OIDC_THUMBPRINT` in environment configuration. For a github OIDC provider, the url is `token.actions.githubusercontent.com` and the thumbprint is `6938fd4d98bab03faadb97b34396831e3780aea1`.
+
 ### Example trust policy with appended statement for identity pool
 In this example, the second object conditionally allows authenticated users from this identity pool to assume the role with a web identity. Two conditions should be applied: `StringEquals` to restrict the statement to this identity pool and `ForAnyValue:StringLike` to restrict to authenticated users.
 
@@ -87,4 +90,3 @@ A streamlined version of the client can be installed with `pip install cognito_c
 
 # License
 This project is licensed under **Apache 2**, see the [LICENSE](LICENSE) file for more details.
-
