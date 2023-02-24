@@ -95,11 +95,14 @@ stack.add_service_client(
 
 # Generate an OIDC provider, allowing CI workers to assume roles in the account
 
-stack.add_oidc_provider(
-    f"veda-oidc-provider-{config.stage}",
-    config.oidc_provider_url,
-    config.oidc_thumbprint,
-)
+oidc_thumbprint = config.oidc_thumbprint
+oidc_provider_url = config.oidc_provider_url
+if oidc_thumbprint and oidc_provider_url:
+    stack.add_oidc_provider(
+        f"veda-oidc-provider-{config.stage}",
+        oidc_provider_url,
+        oidc_thumbprint,
+    )
 
 # Programmatic Clients
 stack.add_programmatic_client("veda-sdk")
