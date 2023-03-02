@@ -13,7 +13,7 @@ stack = AuthStack(
     app,
     f"veda-auth-stack-{config.stage}",
     tags={
-        "Project": "veda",
+        "Project": config.project,
         "Owner": config.owner,
         "Client": "nasa-impact",
         "Stack": config.stage,
@@ -25,7 +25,7 @@ if data_managers_role_arn := config.data_managers_role_arn:
     stack.add_cognito_group_with_existing_role(
         "veda-data-store-managers",
         "Authenticated users assume read write veda data access role",
-        role_arn=data_managers_role_arn
+        role_arn=data_managers_role_arn,
     )
 
 # Create Groups
@@ -89,6 +89,11 @@ stack.add_service_client(
 
 # Programmatic Clients
 stack.add_programmatic_client("veda-sdk")
+
+# Data Access Role
+stack.data_access_role(
+    f"{config.project}-{config.stage}", config.delta_backend_external_role_arn
+)
 
 # Frontend Clients
 # stack.add_frontend_client('veda-dashboard')

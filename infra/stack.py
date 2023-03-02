@@ -40,6 +40,16 @@ class AuthStack(Stack):
         self._group_precedence = 0
 
         stack_name = Stack.of(self).stack_name
+
+        CfnOutput(
+            self,
+            "jwks_url",
+            export_name=f"{stack_name}-jwks-url",
+            value=(
+                f"https://cognito-idp.{Stack.of(self).region}.amazonaws.com"
+                f"/{self.userpool.user_pool_id}/.well-known/jwks.json"
+            ),
+        )
         CfnOutput(
             self,
             "userpool_id",
@@ -123,7 +133,7 @@ class AuthStack(Stack):
         Args:
             role_arn (str): ARN of IAM role to be assumed by an authenticated user from an authorized group
         """
-        
+
         role = iam.Role.from_role_arn(
             self,
             "authenticated-role",
@@ -131,8 +141,8 @@ class AuthStack(Stack):
         )
 
         role.grant(
-            self.identitypool.authenticated_role.grant_principal ,
-            "sts:AssumeRoleWithWebIdentity"
+            self.identitypool.authenticated_role.grant_principal,
+            "sts:AssumeRoleWithWebIdentity",
         )
 
     def _add_domain(self, userpool: cognito.UserPool) -> cognito.UserPoolDomain:
@@ -383,4 +393,41 @@ class AuthStack(Stack):
             group_name=group_name,
             precedence=self.group_precedence,
             role_arn=role_arn,
+        )
+
+    def data_access_role(
+        self,
+        service_id: str,
+        delta_backened_external_role_arn: str,
+    ):
+        """
+        Creates data access role used for veda-stac-ingestor and veda-data-pipelines
+        """
+        role = iam.Role(
+            self,
+            f"{service_id}-data-access-role",
+            assumed_by=iam.CompositePrincipal(
+                iam.ServicePrincipal("lambda.amazonaws.com"),
+                iam.ArnPrincipal(delta_backened_external_role_arn),
+            ),
+        )
+        role.attach_inline_policy(
+            iam.Policy(
+                self,
+                "Policy",
+                statements=[
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        actions=["s3:PutObject*", "s3:ListBucket*", "s3:GetObject*"],
+                        resources=[
+                            "arn:aws:s3:::nasa-maap-data-store/*",
+                            "arn:aws:s3:::nasa-maap-data-store",
+                            "arn:aws:s3:::maap-user-shared-data/*",
+                            "arn:aws:s3:::maap-user-shared-data",
+                            "arn:aws:s3:::maap-ops-workspace/*",
+                            "arn:aws:s3:::maap-ops-workspace",
+                        ],
+                    )
+                ],
+            )
         )

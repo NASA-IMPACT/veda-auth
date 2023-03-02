@@ -24,6 +24,14 @@ class Config(pydantic.BaseSettings):
         ),
         default_factory=getuser,
     )
+    project: str = pydantic.Field(
+        description="Name of the project",
+        default="veda",
+    )
+    delta_backend_external_role_arn: str = pydantic.Field(
+        description="ARN of the delta-backend-staging-*-external-role deployed by",
+        default="",
+    )
     data_managers_role_arn: str = pydantic.Field(
         None,
         description="ARN of role to be assumed by authenticated users in data managers group.",
