@@ -3,8 +3,8 @@ import os
 
 import aws_cdk as cdk
 
-from infra.stack import AuthStack, BucketPermissions
 from config import Config
+from infra.stack import AuthStack, BucketPermissions
 
 config = Config(_env_file=os.environ.get("ENV_FILE", ".env"))
 
