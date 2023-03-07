@@ -20,6 +20,7 @@ class BucketPermissions(str, Enum):
 class AuthStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
         self.userpool = self._create_userpool()
         self.domain = self._add_domain(self.userpool)
         auth_provider_client = self.add_programmatic_client(
@@ -113,7 +114,8 @@ class AuthStack(Stack):
             role_mappings=[
                 cognito_id_pool.IdentityPoolRoleMapping(
                     provider_url=cognito_id_pool.IdentityPoolProviderUrl.user_pool(
-                        f"cognito-idp.{stack.region}.{stack.url_suffix}/{userpool.user_pool_id}:{auth_provider_client.user_pool_client_id}"
+                        f"cognito-idp.{stack.region}.{stack.url_suffix}/"
+                        f"{userpool.user_pool_id}:{auth_provider_client.user_pool_client_id}"
                     ),
                     use_token=True,
                     mapping_key="userpool",
@@ -226,6 +228,46 @@ class AuthStack(Stack):
         )
 
         return secret
+
+    def add_oidc_provider(
+        self,
+        provider_name: str,
+        oidc_domain: str,
+        oidc_thumbprint: str,
+    ) -> iam.OpenIdConnectProvider:
+
+        # OIDC providers are unique per account/url pair. If the provider already exists,
+        # we can just reuse it. Otherwise, we need to create it.
+
+        # get account id being used
+        account_id = Stack.of(self).account
+        # constuct arn for oidc provider
+        oidc_provider_arn = f"arn:aws:iam::{account_id}:oidc-provider/{oidc_domain}"
+        # try to find existing provider in account
+
+        CfnOutput(
+            self,
+            "oidc-provider-arn",
+            export_name=f"{Stack.of(self).stack_name}-oidc-provider-arn",
+            value=oidc_provider_arn,
+        )
+
+        try:
+            oidc_provider = iam.OpenIdConnectProvider.from_open_id_connect_provider_arn(
+                self,
+                "oidc-provider",
+                oidc_provider_arn,
+            )
+            return oidc_provider
+        except ValueError:
+            # create new provider if not found
+            return iam.OpenIdConnectProvider(
+                self,
+                provider_name,
+                url=f"https://{oidc_domain}",
+                client_ids=["sts.amazonaws.com"],  # role assumption client
+                thumbprints=[oidc_thumbprint],
+            )
 
     def add_resource_server(
         self,

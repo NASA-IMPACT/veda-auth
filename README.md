@@ -51,6 +51,9 @@ Generates an IAM role, granting `s3:PutObject*`, `s3:ListBucket*`, `s3:GetObject
 2. Set `BUCKETS` in environment configuration. Where `BUCKETS` is interpreted as a list of bucket prefixes in which to allow permissions. 
 E.g. `'["example-bucket","exmaple-bucket/*"]'`
 
+## Using an OIDC provider
+To additionally deploy an OIDC provider (or use an existing one in the same account), set `OIDC_PROVIDER_URL` and `OIDC_THUMBPRINT` in environment configuration. For a github OIDC provider, the url is `token.actions.githubusercontent.com` and the thumbprint is `6938fd4d98bab03faadb97b34396831e3780aea1`.
+
 ### Example trust policy with appended statement for identity pool
 In this example, the second object conditionally allows authenticated users from this identity pool to assume the role with a web identity. Two conditions should be applied: `StringEquals` to restrict the statement to this identity pool and `ForAnyValue:StringLike` to restrict to authenticated users.
 
@@ -93,4 +96,3 @@ A streamlined version of the client can be installed with `pip install cognito_c
 
 # License
 This project is licensed under **Apache 2**, see the [LICENSE](LICENSE) file for more details.
-

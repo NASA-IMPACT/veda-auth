@@ -1,4 +1,5 @@
 from getpass import getuser
+from typing import Optional
 
 from typing import List
 import pydantic
@@ -43,3 +44,13 @@ class Config(pydantic.BaseSettings):
         ),
     )
     buckets: List = []
+
+    oidc_provider_url: Optional[str] = pydantic.Field(
+        None,
+        description="URL of OIDC provider to use for CI workers.",
+    )
+
+    oidc_thumbprint: Optional[str] = pydantic.Field(
+        None,
+        description="Thumbprint of OIDC provider to use for CI workers.",
+    )
