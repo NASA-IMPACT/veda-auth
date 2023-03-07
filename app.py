@@ -31,7 +31,7 @@ if data_managers_role_arn := config.data_managers_role_arn:
 # Create Groups
 stack.add_cognito_group(
     "veda-staging-writers",
-    "Users that have read/write-access to the VEDA store and staging datastore",
+    "Users that have read/write-access to the VEDA store and staging datastore",  # noqa
     {
         "veda-data-store-dev": BucketPermissions.read_write,
         "veda-data-store": BucketPermissions.read_write,
@@ -77,9 +77,9 @@ stac_registry_scopes = stack.add_resource_server(
 )
 
 
-# Generate a client for a service, specifying the permissions it will be granted.
-# In this case, we want this client to be able to only register new STAC ingestions in
-# the STAC ingestion registry service.
+# Generate a client for a service, specifying the permissions it will
+# be granted. In this case, we want this client to be able to only
+# register new STAC ingestions in the STAC ingestion registry service.
 stack.add_service_client(
     "veda-workflows",
     scopes=[
@@ -91,9 +91,12 @@ stack.add_service_client(
 stack.add_programmatic_client("veda-sdk")
 
 # Data Access Role
-stack.data_access_role(
-    f"{config.project}-{config.stage}", config.delta_backend_external_role_arn
-)
+if (buckets := config.buckets):
+    stack.data_access_role(
+        f"{config.project}-{config.stage}",
+        config.delta_backend_external_role_arn,
+        config.buckets,
+    )
 
 # Frontend Clients
 # stack.add_frontend_client('veda-dashboard')

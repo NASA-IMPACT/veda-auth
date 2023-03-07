@@ -390,20 +390,18 @@ class AuthStack(Stack):
         )
 
     def data_access_role(
-        self,
-        service_id: str,
-        delta_backened_external_role_arn: str,
+        self, service_id: str, delta_backened_external_role_arn: Optional[str], buckets: list
     ):
         """
         Creates data access role used for veda-stac-ingestor and veda-data-pipelines
         """
+        role_assume = iam.CompositePrincipal(iam.ServicePrincipal("lambda.amazonaws.com"))
+        if delta_backened_external_role_arn:
+            role_assume.add_principals(iam.ArnPrincipal(delta_backened_external_role_arn))
         role = iam.Role(
             self,
             f"{service_id}-data-access-role",
-            assumed_by=iam.CompositePrincipal(
-                iam.ServicePrincipal("lambda.amazonaws.com"),
-                iam.ArnPrincipal(delta_backened_external_role_arn),
-            ),
+            assumed_by=role_assume,
         )
         role.attach_inline_policy(
             iam.Policy(
@@ -413,14 +411,7 @@ class AuthStack(Stack):
                     iam.PolicyStatement(
                         effect=iam.Effect.ALLOW,
                         actions=["s3:PutObject*", "s3:ListBucket*", "s3:GetObject*"],
-                        resources=[
-                            "arn:aws:s3:::nasa-maap-data-store/*",
-                            "arn:aws:s3:::nasa-maap-data-store",
-                            "arn:aws:s3:::maap-user-shared-data/*",
-                            "arn:aws:s3:::maap-user-shared-data",
-                            "arn:aws:s3:::maap-ops-workspace/*",
-                            "arn:aws:s3:::maap-ops-workspace",
-                        ],
+                        resources=[f"arn:aws:s3:::{bucket}" for bucket in buckets],
                     )
                 ],
             )

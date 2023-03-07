@@ -1,5 +1,6 @@
 from getpass import getuser
 
+from typing import List
 import pydantic
 
 
@@ -29,10 +30,16 @@ class Config(pydantic.BaseSettings):
         default="veda",
     )
     delta_backend_external_role_arn: str = pydantic.Field(
-        description="ARN of the delta-backend-staging-*-external-role deployed by",
-        default="",
+        "",
+        description=(
+            "ARN of the delta-backend-staging-*-external-role"
+            " deployed by veda-stack-ingestor"
+        ),
     )
     data_managers_role_arn: str = pydantic.Field(
         None,
-        description="ARN of role to be assumed by authenticated users in data managers group.",
+        description=(
+            "ARN of role to be assumed by authenticated users in data managers group."
+        ),
     )
+    buckets: List = []
