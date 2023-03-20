@@ -1,7 +1,6 @@
 from getpass import getuser
-from typing import Optional
+from typing import List, Optional
 
-from typing import List
 import pydantic
 
 
@@ -30,20 +29,20 @@ class Config(pydantic.BaseSettings):
         description="Name of the project",
         default="veda",
     )
-    delta_backend_external_role_arn: str = pydantic.Field(
-        "",
+    veda_backend_external_role_arn: Optional[str] = pydantic.Field(
         description=(
-            "ARN of the delta-backend-staging-*-external-role"
-            " deployed by veda-stack-ingestor"
+            "ARN of the veda-backend-staging-*-external-role"
+            " deployed by veda-stac-ingestor"
         ),
     )
-    data_managers_role_arn: str = pydantic.Field(
-        None,
+    data_managers_role_arn: Optional[str] = pydantic.Field(
         description=(
             "ARN of role to be assumed by authenticated users in data managers group."
         ),
     )
-    buckets: List = []
+
+    # Optional list of buckets/s3 prefixes to be granted access to
+    access_role_buckets: List[str] = []
 
     oidc_provider_url: Optional[str] = pydantic.Field(
         None,

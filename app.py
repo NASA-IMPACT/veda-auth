@@ -108,11 +108,11 @@ if oidc_thumbprint and oidc_provider_url:
 stack.add_programmatic_client("veda-sdk")
 
 # Data Access Role
-if (buckets := config.buckets):
+if config.access_role_buckets:
     stack.data_access_role(
         f"{config.project}-{config.stage}",
         config.delta_backend_external_role_arn,
-        config.buckets,
+        config.access_role_buckets,
     )
 
 # Frontend Clients
