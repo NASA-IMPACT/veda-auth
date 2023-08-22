@@ -186,6 +186,7 @@ class AuthStack(Stack):
         self,
         service_id: str,
         secret_dict: Dict[Any, Any],
+        secret_role_access: Sequence[str] = []  # list of roles with access to get secret value
     ):
         """
         Create a secret to represent service credentials.
@@ -203,6 +204,10 @@ class AuthStack(Stack):
             # CloudFormation template.
             secret_string_value=SecretValue.unsafe_plain_text(json.dumps(secret_dict)),
         )
+        
+        for role_arn in secret_role_access:
+            role = iam.Role.from_role_arn(self, f"ImportedRole{role_arn.split(':')[-1]}", role_arn)
+            secret.grant_read(role)
 
         CfnOutput(
             self,
@@ -296,6 +301,7 @@ class AuthStack(Stack):
         self,
         service_id: str,
         name: Optional[str] = None,
+        secret_role_access: Optional[str] = []  # Optional role arns with access to auth flow secret
     ) -> cognito.UserPoolClient:
 
         client = self.userpool.add_client(
@@ -313,6 +319,7 @@ class AuthStack(Stack):
                 "cognito_domain": self.domain.base_url(),
                 "client_id": client.user_pool_client_id,
             },
+            secret_role_access,
         )
 
         return client

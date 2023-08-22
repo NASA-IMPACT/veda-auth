@@ -1,5 +1,5 @@
 from getpass import getuser
-from typing import Optional
+from typing import Optional, Sequence
 
 import pydantic
 
@@ -38,4 +38,9 @@ class Config(pydantic.BaseSettings):
     oidc_thumbprint: Optional[str] = pydantic.Field(
         None,
         description="Thumbprint of OIDC provider to use for CI workers.",
+    )
+
+    secret_role_access: Sequence[str] = pydantic.Field(
+        [],
+        description="Optional list of role ARNs with access to credential flow secrets"
     )
