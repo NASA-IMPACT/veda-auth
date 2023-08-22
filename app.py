@@ -104,6 +104,8 @@ if oidc_thumbprint and oidc_provider_url:
         oidc_thumbprint,
     )
 
+
+
 # Programmatic Clients
 stack.add_programmatic_client("veda-sdk")
 
