@@ -1,6 +1,8 @@
 from getpass import getuser
 from typing import Optional
 
+import os
+
 import pydantic
 
 
@@ -39,3 +41,17 @@ class Config(pydantic.BaseSettings):
         None,
         description="Thumbprint of OIDC provider to use for CI workers.",
     )
+
+    permissions_boundary_policy_name: Optional[str] = pydantic.Field(
+        None,
+        description="Name of IAM policy to define stack permissions boundary",
+    )
+
+    # Since MCP doesn't allow creating identity pools, setting this as optional
+    cognito_groups: Optional[bool] = pydantic.Field(
+        True,
+        description="Where to create cognito groups with bucket access permissions",
+    )
+
+
+app_settings = Config(_env_file=os.environ.get("ENV_FILE", ".env"))
