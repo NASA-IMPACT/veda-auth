@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 import subprocess
 
 import aws_cdk as cdk
@@ -24,7 +23,7 @@ tags = {
 }
 
 app = cdk.App()
-stack = AuthStack(app, f"veda-auth-stack-{app_settings.stage}")
+stack = AuthStack(app, f"veda-auth-stack-{app_settings.stage}", app_settings)
 
 # Create Groups
 if app_settings.cognito_groups:

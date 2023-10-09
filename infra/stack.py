@@ -38,7 +38,12 @@ class AuthStack(Stack):
 
             Aspects.of(self).add(PermissionBoundaryAspect(permission_boundary_policy))
 
-        self.userpool = self._create_userpool()
+        if app_settings.user_pool_id:
+            self.userpool = cognito.UserPool.from_user_pool_id(
+                self, "userpool", user_pool_id=app_settings.user_pool_id
+            )
+        else:
+            self.userpool = self._create_userpool()
         self.domain = self._add_domain(self.userpool)
 
         stack_name = Stack.of(self).stack_name
@@ -46,14 +51,19 @@ class AuthStack(Stack):
         if app_settings.cognito_groups:
             self._group_precedence = 0
 
-            auth_provider_client = self.add_programmatic_client(
-                "cognito-identity-pool-auth-provider",
-                name="Identity Pool Authentication Provider",
-            )
-            self.identitypool = self._create_identity_pool(
-                userpool=self.userpool,
-                auth_provider_client=auth_provider_client,
-            )
+            if app_settings.identity_pool_id:
+                self.identitypool = cognito_id_pool.IdentityPool.from_identity_pool_id(
+                    self, "identity-pool", app_settings.identity_pool_id_id
+                )
+            else:
+                auth_provider_client = self.add_programmatic_client(
+                    "cognito-identity-pool-auth-provider",
+                    name="Identity Pool Authentication Provider",
+                )
+                self.identitypool = self._create_identity_pool(
+                    userpool=self.userpool,
+                    auth_provider_client=auth_provider_client,
+                )
             CfnOutput(
                 self,
                 "identitypool_id",
