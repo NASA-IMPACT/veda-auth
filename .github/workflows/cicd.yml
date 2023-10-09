@@ -87,4 +87,6 @@ jobs:
         run: ./scripts/sync-env.sh veda-auth-mcp-dev
 
       - name: Deploy
+        env:
+          AWS_DEFAULT_REGION: us-west-2
         run: cdk deploy --all --require-approval never --outputs-file ${HOME}/cdk-outputs.json
