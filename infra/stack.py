@@ -53,7 +53,7 @@ class AuthStack(Stack):
 
             if app_settings.identity_pool_id:
                 self.identitypool = cognito_id_pool.IdentityPool.from_identity_pool_id(
-                    self, "identity-pool", app_settings.identity_pool_id_id
+                    self, "identity-pool", app_settings.identity_pool_id
                 )
             else:
                 auth_provider_client = self.add_programmatic_client(
