@@ -60,12 +60,12 @@ jobs:
       - name: Install node and related deps
         uses: actions/setup-node@v3
         with:
-        node-version: 17.3.0
+          node-version: 17.3.0
 
       - uses: actions/cache@v3
         with:
-        path: ~/.npm
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install AWS CDK
         shell: bash
