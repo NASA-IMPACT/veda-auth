@@ -89,4 +89,5 @@ jobs:
       - name: Deploy
         env:
           AWS_DEFAULT_REGION: us-west-2
+          CDK_DEFAULT_REGION: us-west-2
         run: cdk deploy --all --require-approval never --outputs-file ${HOME}/cdk-outputs.json
