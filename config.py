@@ -53,7 +53,7 @@ class Config(pydantic.BaseSettings):
         description="whether to create cognito groups with bucket access permissions",
     )
 
-    identity_pool_id: Optional[str] = pydantic.Field(
+    identity_pool_arn: Optional[str] = pydantic.Field(
         "",
         description="If creating cognito groups for access control, identity_pool id to associate",
     )

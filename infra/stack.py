@@ -51,9 +51,9 @@ class AuthStack(Stack):
         if app_settings.cognito_groups:
             self._group_precedence = 0
 
-            if app_settings.identity_pool_id:
-                self.identitypool = cognito_id_pool.IdentityPool.from_identity_pool_id(
-                    self, "identity-pool", app_settings.identity_pool_id
+            if app_settings.identity_pool_arn:
+                self.identitypool = cognito_id_pool.IdentityPool.from_identity_pool_arn(
+                    self, "identity-pool", app_settings.identity_pool_arn
                 )
             else:
                 auth_provider_client = self.add_programmatic_client(
@@ -76,18 +76,18 @@ class AuthStack(Stack):
                 export_name=f"{stack_name}-identitypool-arn",
                 value=self.identitypool.identity_pool_arn,
             )
-            CfnOutput(
-                self,
-                "identitypool_client_id",
-                export_name=f"{stack_name}-client-id",
-                value=auth_provider_client.user_pool_client_id,
-            )
-            CfnOutput(
-                self,
-                "identitypool_data_managers_role_arn",
-                export_name=f"{stack_name}-data-managers-role-arn",
-                value=self.identitypool.authenticated_role.role_arn,
-            )
+            # CfnOutput(
+            #     self,
+            #     "identitypool_client_id",
+            #     export_name=f"{stack_name}-client-id",
+            #     value=auth_provider_client.user_pool_client_id,
+            # )
+            # CfnOutput(
+            #     self,
+            #     "identitypool_data_managers_role_arn",
+            #     export_name=f"{stack_name}-data-managers-role-arn",
+            #     value=self.identitypool.authenticated_role.role_arn,
+            # )
 
     def _create_userpool(self) -> cognito.UserPool:
         return cognito.UserPool(
