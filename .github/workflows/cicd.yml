@@ -1,0 +1,91 @@
+name: CICD 🚀
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - production
+      - make-mcp-ready
+
+jobs:
+  define-environment:
+    name: Set ✨ environment ✨ based on the branch 🌳
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set the environment
+        id: define_environment
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "env_name=staging" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+            echo "env_name=development" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/production" ]; then
+            echo "env_name=production" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/make-mcp-ready" ]; then
+            echo "env_name=mcp-dev" >> $GITHUB_OUTPUT
+          fi
+      - name: Print the environment
+        run: echo "The environment is ${{ steps.define_environment.outputs.env_name }}"
+
+    outputs:
+      env_name: ${{ steps.define_environment.outputs.env_name }}
+
+  deploy:
+    name: Deploy to ${{ needs.define-environment.outputs.env_name }} 🚀
+    runs-on: ubuntu-latest
+    if: ${{ needs.define-environment.outputs.env_name }}
+    needs: [define-environment]
+    environment: ${{ needs.define-environment.outputs.env_name }}
+    concurrency: ${{ needs.define-environment.outputs.env_name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: "true"
+          submodules: "recursive"
+        
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.DEPLOYMENT_ROLE_ARN }}
+          role-session-name: "veda-auth-github-${{ needs.define-environment.outputs.env_name }}-deployment"
+          aws-region: "us-west-2"
+
+      - name: Install node and related deps
+        uses: actions/setup-node@v3
+        with:
+        node-version: 17.3.0
+
+      - uses: actions/cache@v3
+        with:
+        path: ~/.npm
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install AWS CDK
+        shell: bash
+        run: npm install -g aws-cdk@2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip"
+          cache-dependency-path: |
+              ${{ inputs.dir }}/requirements.txt
+
+      - name: Install python dependencies
+        run: |
+          pip install \
+            -r requirements.txt \
+
+      - name: Get relevant environment configuration from aws secrets
+        run: ./scripts/sync-env.sh veda-auth-mcp-dev
+
+      - name: Deploy
+        run: cdk deploy --all --require-approval never --outputs-file ${HOME}/cdk-outputs.json
