@@ -7,6 +7,11 @@ import pydantic
 
 
 class Config(pydantic.BaseSettings):
+    # App name and deployment stage
+    app_name: Optional[str] = pydantic.Field(
+        "veda-auth-stack",
+        description="Optional app name used to name stack and resources",
+    )
     stage: str = pydantic.Field(
         description=" ".join(
             [

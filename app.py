@@ -23,8 +23,7 @@ tags = {
 }
 
 app = cdk.App()
-stack = AuthStack(app, f"veda-auth-stack-{app_settings.stage}", app_settings)
-
+stack = AuthStack(app, f"{app_settings.app_name}-{app_settings.stage}", app_settings)
 # Create Groups
 if app_settings.cognito_groups:
     # Create a data managers group in user pool if data managers role is provided
