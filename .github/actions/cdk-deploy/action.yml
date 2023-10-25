@@ -12,7 +12,10 @@ inputs:
     required: true
     type: string
 outputs:
-  auth_stackname: ${{ steps.deploy_stack.outputs.auth_stackname }}
+  auth_stackname:
+    description: "Auth Stack name"
+    value: ${{ steps.deploy_auth_stack.outputs.auth_stackname }}
+
 
 runs:
   using: "composite"
@@ -59,12 +62,12 @@ runs:
         fi
 
     - name: Deploy
-      id: deploy_stack
+      id: deploy_auth_stack
       shell: bash
       working-directory: ${{ inputs.dir }}
       run: |
         echo "auth_stackname=hello-world" >> $GITHUB_OUTPUT
     - name: Print stackname
       shell: bash
-      run: echo "The stackname is ${{ steps.deploy_stack.outputs.auth_stackname }}"
+      run: echo "The environment is ${{ steps.deploy_stack.outputs.auth_stackname }}"
 
