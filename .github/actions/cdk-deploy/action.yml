@@ -11,7 +11,10 @@ inputs:
   script_path:
     required: true
     type: string
-
+outputs:
+  auth_stackname:
+    description: "Auth Stack name"
+    value: ${{ steps.deploy_stack.outputs.auth_stackname }}
 runs:
   using: "composite"
   steps:
