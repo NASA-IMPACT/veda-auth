@@ -66,8 +66,8 @@ runs:
       shell: bash
       working-directory: ${{ inputs.dir }}
       run: |
-        echo "auth_stackname=hello-world" >> $GITHUB_OUTPUT
-    - name: Print stackname
-      shell: bash
-      run: echo "The environment is ${{ steps.deploy_stack.outputs.auth_stackname }}"
+        cdk deploy --all --require-approval never --outputs-file ${HOME}/cdk-outputs.json
+        stack=$(cat ${HOME}/cdk-outputs.json | jq -r 'keys_unsorted[0]')
+        echo "auth_stackname=$stack" >> $GITHUB_OUTPUT
+
 
