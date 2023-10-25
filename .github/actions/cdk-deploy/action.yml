@@ -57,8 +57,11 @@ runs:
         fi
 
     - name: Deploy
+      id: deploy_stack
       shell: bash
       working-directory: ${{ inputs.dir }}
       run: |
         echo "auth_stackname=hello-world" >> $GITHUB_OUTPUT
+    - name: Print stackname
+      run: echo "The environment is ${{ steps.deploy_stack.outputs.auth_stackname }}"
 
