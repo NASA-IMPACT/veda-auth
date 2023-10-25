@@ -60,8 +60,5 @@ runs:
       shell: bash
       working-directory: ${{ inputs.dir }}
       run: |
-        cdk deploy --all --require-approval never --outputs-file ${HOME}/cdk-outputs.json
-        stack=$(cat ${HOME}/cdk-outputs.json | jq -r 'keys_unsorted[0]')
-        echo $stack
         echo "auth_stackname=hello-world" >> $GITHUB_OUTPUT
 
