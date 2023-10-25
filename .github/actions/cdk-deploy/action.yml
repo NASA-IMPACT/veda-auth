@@ -63,5 +63,6 @@ runs:
       run: |
         echo "auth_stackname=hello-world" >> $GITHUB_OUTPUT
     - name: Print stackname
+      shell: bash
       run: echo "The environment is ${{ steps.deploy_stack.outputs.auth_stackname }}"
 
