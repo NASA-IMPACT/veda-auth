@@ -104,8 +104,13 @@ if oidc_thumbprint and oidc_provider_url:
     )
 
 # Programmatic Clients
-stack.add_programmatic_client("veda-sdk")
-
+client = stack.add_programmatic_client(f"{app_settings.app_name}-{app_settings.stage}-veda-sdk")
+cdk.CfnOutput(
+    stack,
+    "client_id",
+    export_name=f"{app_settings.app_name}-{app_settings.stage}-client-id",
+    value=client.user_pool_client_id,
+)
 # Frontend Clients
 # stack.add_frontend_client('veda-dashboard')
 

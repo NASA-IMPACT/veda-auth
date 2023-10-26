@@ -13,7 +13,7 @@ from constructs import Construct
 from aws_cdk import Aspects
 
 from config import Config
-
+import uuid
 
 class BucketPermissions(str, Enum):
     read_only = "r"
@@ -45,9 +45,13 @@ class AuthStack(Stack):
         else:
             self.userpool = self._create_userpool()
         self.domain = self._add_domain(self.userpool)
-
         stack_name = Stack.of(self).stack_name
-
+        CfnOutput(
+            self,
+            "userpool_id",
+            export_name=f"{uuid.uuid4()}-userpool-id",
+            value=self.userpool.user_pool_id,
+        )
         if app_settings.cognito_groups:
             self._group_precedence = 0
 
