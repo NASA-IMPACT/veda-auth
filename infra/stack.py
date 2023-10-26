@@ -13,7 +13,6 @@ from constructs import Construct
 from aws_cdk import Aspects
 
 from config import Config
-import uuid
 
 class BucketPermissions(str, Enum):
     read_only = "r"
@@ -49,7 +48,7 @@ class AuthStack(Stack):
         CfnOutput(
             self,
             "userpool_id",
-            export_name=f"{uuid.uuid4()}-userpool-id",
+            export_name=f"{stack_name}-userpool-id",
             value=self.userpool.user_pool_id,
         )
         if app_settings.cognito_groups:
