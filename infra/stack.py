@@ -227,10 +227,12 @@ class AuthStack(Stack):
             secret_string_value=SecretValue.unsafe_plain_text(json.dumps(secret_dict)),
         )
 
+        # We need to extract the secret name to be used for ingestor stac
+        # We expect the exported name to be of the format "<stackname>-<variablename>"
         CfnOutput(
             self,
             f"{service_id}-secret-output",
-            export_name=f"{stack_name}-{service_id}-secret",
+            export_name=f"{stack_name}-{service_id}-secret" if stack_name not in service_id else f"{stack_name}-client-secret",
             value=secret.secret_name,
         )
         CfnOutput(

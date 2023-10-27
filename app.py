@@ -111,6 +111,7 @@ cdk.CfnOutput(
     export_name=f"{app_settings.app_name}-{app_settings.stage}-client-id",
     value=client.user_pool_client_id,
 )
+
 # Frontend Clients
 # stack.add_frontend_client('veda-dashboard')
 
