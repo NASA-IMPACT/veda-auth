@@ -11,10 +11,7 @@ inputs:
   script_path:
     required: true
     type: string
-outputs:
-  auth_stackname:
-    description: "Auth Stack name"
-    value: ${{ steps.deploy_auth_stack.outputs.auth_stackname }}
+
 
 
 runs:
@@ -67,7 +64,3 @@ runs:
       working-directory: ${{ inputs.dir }}
       run: |
         cdk deploy --all --require-approval never --outputs-file ${HOME}/cdk-outputs.json
-        stack=$(cat ${HOME}/cdk-outputs.json | jq -r 'keys_unsorted[0]')
-        echo "auth_stackname=$stack" >> $GITHUB_OUTPUT
-
-
