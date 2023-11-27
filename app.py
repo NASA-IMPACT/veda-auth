@@ -25,6 +25,14 @@ tags = {
 app = cdk.App()
 stack = AuthStack(app, f"veda-auth-stack-{app_settings.stage}", app_settings)
 
+# Create an data managers group in user pool if data managers role is provided (legacy stack support)
+if data_managers_role_arn := app_settings.data_managers_role_arn:
+    stack.add_cognito_group_with_existing_role(
+        "veda-data-store-managers",
+        "Authenticated users assume read write veda data access role",
+        role_arn=data_managers_role_arn,
+    )
+
 # Create Groups
 if app_settings.cognito_groups:
     # Create a data managers group in user pool if data managers role is provided
