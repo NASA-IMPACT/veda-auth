@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import subprocess
 
-import aws_cdk as cdk
+from aws_cdk import App, Tags
 
 from infra.stack import AuthStack, BucketPermissions
 
@@ -22,7 +22,7 @@ tags = {
     "GitTag": git_tag,
 }
 
-app = cdk.App()
+app = App()
 if app_settings.bootstrap_qualifier:
     app.node.set_context(
         "@aws-cdk/core:bootstrapQualifier", app_settings.bootstrap_qualifier
@@ -124,6 +124,6 @@ stack.add_programmatic_client("veda-sdk")
 # stack.add_frontend_client('veda-dashboard')
 
 for key, value in tags.items():
-    cdk.Tags.of(stack).add(key, value)
+    Tags.of(stack).add(key, value)
 
 app.synth()
