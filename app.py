@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-import os
 import subprocess
 
 import aws_cdk as cdk
 
-from config import Config
 from infra.stack import AuthStack, BucketPermissions
 
-config = Config(_env_file=os.environ.get("ENV_FILE", ".env"))
+from config import app_settings
+
 git_sha = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
 try:
     git_tag = subprocess.check_output(["git", "describe", "--tags"]).decode().strip()
@@ -16,18 +15,18 @@ except subprocess.CalledProcessError:
 
 tags = {
     "Project": "veda",
-    "Owner": config.owner,
+    "Owner": app_settings.owner,
     "Client": "nasa-impact",
-    "Stack": config.stage,
+    "Stack": app_settings.stage,
     "GitCommit": git_sha,
     "GitTag": git_tag,
 }
 
 app = cdk.App()
-stack = AuthStack(app, f"veda-auth-stack-{config.stage}")
+stack = AuthStack(app, f"veda-auth-stack-{app_settings.stage}", app_settings)
 
-# Create a data managers group in user pool if data managers role is provided
-if data_managers_role_arn := config.data_managers_role_arn:
+# Create an data managers group in user pool if data managers role is provided (legacy stack support)
+if data_managers_role_arn := app_settings.data_managers_role_arn:
     stack.add_cognito_group_with_existing_role(
         "veda-data-store-managers",
         "Authenticated users assume read write veda data access role",
@@ -35,41 +34,50 @@ if data_managers_role_arn := config.data_managers_role_arn:
     )
 
 # Create Groups
-stack.add_cognito_group(
-    "veda-staging-writers",
-    "Users that have read/write-access to the VEDA store and staging datastore",
-    {
-        "veda-data-store-dev": BucketPermissions.read_write,
-        "veda-data-store": BucketPermissions.read_write,
-        "veda-data-store-staging": BucketPermissions.read_write,
-    },
-)
-stack.add_cognito_group(
-    "veda-writers",
-    "Users that have read/write-access to the VEDA store",
-    {
-        "veda-data-store-dev": BucketPermissions.read_write,
-        "veda-data-store": BucketPermissions.read_write,
-    },
-)
+if app_settings.cognito_groups:
+    # Create a data managers group in user pool if data managers role is provided
+    if data_managers_role_arn := app_settings.data_managers_role_arn:
+        stack.add_cognito_group_with_existing_role(
+            "veda-data-store-managers",
+            "Authenticated users assume read write veda data access role",
+            role_arn=data_managers_role_arn,
+        )
 
-stack.add_cognito_group(
-    "veda-staging-readers",
-    "Users that have read-access to the VEDA store and staging data store",
-    {
-        "veda-data-store-dev": BucketPermissions.read_only,
-        "veda-data-store": BucketPermissions.read_only,
-        "veda-data-store-staging": BucketPermissions.read_only,
-    },
-)
-# TODO: Should this be the default IAM role for the user group?
-stack.add_cognito_group(
-    "veda-readers",
-    "Users that have read-access to the VEDA store",
-    {
-        "veda-data-store": BucketPermissions.read_only,
-    },
-)
+    stack.add_cognito_group(
+        "veda-staging-writers",
+        "Users that have read/write-access to the VEDA store and staging datastore",
+        {
+            "veda-data-store-dev": BucketPermissions.read_write,
+            "veda-data-store": BucketPermissions.read_write,
+            "veda-data-store-staging": BucketPermissions.read_write,
+        },
+    )
+    stack.add_cognito_group(
+        "veda-writers",
+        "Users that have read/write-access to the VEDA store",
+        {
+            "veda-data-store-dev": BucketPermissions.read_write,
+            "veda-data-store": BucketPermissions.read_write,
+        },
+    )
+
+    stack.add_cognito_group(
+        "veda-staging-readers",
+        "Users that have read-access to the VEDA store and staging data store",
+        {
+            "veda-data-store-dev": BucketPermissions.read_only,
+            "veda-data-store": BucketPermissions.read_only,
+            "veda-data-store-staging": BucketPermissions.read_only,
+        },
+    )
+    # TODO: Should this be the default IAM role for the user group?
+    stack.add_cognito_group(
+        "veda-readers",
+        "Users that have read-access to the VEDA store",
+        {
+            "veda-data-store": BucketPermissions.read_only,
+        },
+    )
 
 # Generate a resource server (ie something to protect behind auth) with scopes
 # (permissions that we can grant to users/services).
@@ -95,11 +103,11 @@ stack.add_service_client(
 
 # Generate an OIDC provider, allowing CI workers to assume roles in the account
 
-oidc_thumbprint = config.oidc_thumbprint
-oidc_provider_url = config.oidc_provider_url
+oidc_thumbprint = app_settings.oidc_thumbprint
+oidc_provider_url = app_settings.oidc_provider_url
 if oidc_thumbprint and oidc_provider_url:
     stack.add_oidc_provider(
-        f"veda-oidc-provider-{config.stage}",
+        f"veda-oidc-provider-{app_settings.stage}",
         oidc_provider_url,
         oidc_thumbprint,
     )
