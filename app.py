@@ -7,21 +7,6 @@ from infra.stack import AuthStack, BucketPermissions
 
 from config import app_settings
 
-git_sha = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
-try:
-    git_tag = subprocess.check_output(["git", "describe", "--tags"]).decode().strip()
-except subprocess.CalledProcessError:
-    git_tag = "no-tag"
-
-tags = {
-    "Project": "veda",
-    "Owner": app_settings.owner,
-    "Client": "nasa-impact",
-    "Stack": app_settings.stage,
-    "GitCommit": git_sha,
-    "GitTag": git_tag,
-}
-
 app = App()
 if app_settings.bootstrap_qualifier:
     app.node.set_context(
@@ -122,6 +107,21 @@ stack.add_programmatic_client("veda-sdk")
 
 # Frontend Clients
 # stack.add_frontend_client('veda-dashboard')
+
+git_sha = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
+try:
+    git_tag = subprocess.check_output(["git", "describe", "--tags"]).decode().strip()
+except subprocess.CalledProcessError:
+    git_tag = "no-tag"
+
+tags = {
+    "Project": "veda",
+    "Owner": app_settings.owner,
+    "Client": "nasa-impact",
+    "Stack": app_settings.stage,
+    "GitCommit": git_sha,
+    "GitTag": git_tag,
+}
 
 for key, value in tags.items():
     Tags.of(stack).add(key, value)
