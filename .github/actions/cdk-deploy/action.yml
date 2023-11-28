@@ -12,8 +12,6 @@ inputs:
     required: true
     type: string
 
-
-
 runs:
   using: "composite"
   steps:
@@ -51,16 +49,11 @@ runs:
       working-directory: ${{ inputs.dir }}
       env:
         AWS_DEFAULT_REGION: us-west-2
-      run: |
-        if [[ -z "${{ inputs.script_path }}" ]]; then
-        ./scripts/sync-env.sh ${{ inputs.env_aws_secret_name }}
-        else
-        python ${{ inputs.script_path }} --secret-id ${{ inputs.env_aws_secret_name }}
-        fi
+      run: ./scripts/get-env.sh ${{ inputs.env_aws_secret_name }}
 
     - name: Deploy
       id: deploy_auth_stack
       shell: bash
       working-directory: ${{ inputs.dir }}
       run: |
-        cdk deploy --all --require-approval never --outputs-file ${HOME}/cdk-outputs.json
+        cdk deploy --all --require-approval never
