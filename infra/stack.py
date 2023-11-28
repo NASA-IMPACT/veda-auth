@@ -60,22 +60,23 @@ class AuthStack(Stack):
                     "cognito-identity-pool-auth-provider",
                     name="Identity Pool Authentication Provider",
                 )
-                self.identitypool = self._create_identity_pool(
-                    userpool=self.userpool,
-                    auth_provider_client=auth_provider_client,
-                )
-            CfnOutput(
-                self,
-                "identitypool_id",
-                export_name=f"{stack_name}-identitypool-id",
-                value=self.identitypool.identity_pool_id,
-            )
-            CfnOutput(
-                self,
-                "identitypool_arn",
-                export_name=f"{stack_name}-identitypool-arn",
-                value=self.identitypool.identity_pool_arn,
-            )
+                if app_settings.data_managers_role_arn:
+                    self.identitypool = self._create_identity_pool(
+                        userpool=self.userpool,
+                        auth_provider_client=auth_provider_client,
+                    )
+                    CfnOutput(
+                        self,
+                        "identitypool_id",
+                        export_name=f"{stack_name}-identitypool-id",
+                        value=self.identitypool.identity_pool_id,
+                    )
+                    CfnOutput(
+                        self,
+                        "identitypool_arn",
+                        export_name=f"{stack_name}-identitypool-arn",
+                        value=self.identitypool.identity_pool_arn,
+                    )
             # CfnOutput(
             #     self,
             #     "identitypool_client_id",
