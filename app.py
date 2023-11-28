@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 import subprocess
 
-from aws_cdk import App, Tags
+from aws_cdk import App, Tags, DefaultStackSynthesizer
 
 from infra.stack import AuthStack, BucketPermissions
 
 from config import app_settings
 
 app = App()
-if app_settings.bootstrap_qualifier:
-    app.node.set_context(
-        "@aws-cdk/core:bootstrapQualifier", app_settings.bootstrap_qualifier
-    )
 
-stack = AuthStack(app, f"veda-auth-stack-{app_settings.stage}", app_settings)
+stack = AuthStack(
+    app, 
+    f"veda-auth-stack-{app_settings.stage}", 
+    app_settings,
+    synthesizer=DefaultStackSynthesizer(
+        qualifier=app_settings.bootstrap_qualifier
+    )
+)
 
 # Create an data managers group in user pool if data managers role is provided (legacy stack support)
 if data_managers_role_arn := app_settings.data_managers_role_arn:
