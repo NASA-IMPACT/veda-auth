@@ -49,7 +49,7 @@ class Config(pydantic.BaseSettings):
 
     # Since MCP doesn't allow creating identity pools, setting this as optional
     cognito_groups: Optional[bool] = pydantic.Field(
-        True,
+        False,
         description="whether to create cognito groups with bucket access permissions",
     )
 
