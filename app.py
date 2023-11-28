@@ -23,6 +23,11 @@ tags = {
 }
 
 app = cdk.App()
+if app_settings.bootstrap_qualifier:
+    app.node.set_context(
+        "@aws-cdk/core:bootstrapQualifier", app_settings.bootstrap_qualifier
+    )
+
 stack = AuthStack(app, f"veda-auth-stack-{app_settings.stage}", app_settings)
 
 # Create an data managers group in user pool if data managers role is provided (legacy stack support)

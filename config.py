@@ -62,5 +62,10 @@ class Config(pydantic.BaseSettings):
         "", description="The user pool id to use for user management"
     )
 
+    bootstrap_qualifier: Optional[str] = pydantic.Field(
+        None,
+        description="Custom bootstrap qualifier override if not using a default installation of AWS CDK Toolkit to synthesize app.",
+    )
+
 
 app_settings = Config(_env_file=os.environ.get("ENV_FILE", ".env"))
