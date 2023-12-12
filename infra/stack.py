@@ -363,6 +363,7 @@ class AuthStack(Stack):
                 "cognito_domain": self.domain.base_url(),
                 "client_id": client.user_pool_client_id,
                 "client_secret": self._get_client_secret(client),
+                "userpool_id": self.userpool.user_pool_id,
                 "scope": " ".join(scope.scope_name for scope in scopes),
             },
         )
