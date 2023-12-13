@@ -48,7 +48,7 @@ class AuthStack(Stack):
 
         stack_name = Stack.of(self).stack_name
 
-        if app_settings.cognito_groups:
+        if app_settings.cognito_groups or app_settings.data_managers_group:
             self._group_precedence = 0
 
             if app_settings.identity_pool_arn:

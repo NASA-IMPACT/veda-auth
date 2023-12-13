@@ -32,6 +32,11 @@ class Config(pydantic.BaseSettings):
         description="ARN of role to be assumed by authenticated users in data managers group.",
     )
 
+    data_managers_group: bool = pydantic.Field(
+        False,
+        description="When true create data managers group (mcp-deploy refactor now requires additional control setting to enable creating this group).",
+    )
+
     oidc_provider_url: Optional[str] = pydantic.Field(
         None,
         description="URL of OIDC provider to use for CI workers.",
