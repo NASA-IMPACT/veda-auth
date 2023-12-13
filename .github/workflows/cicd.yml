@@ -7,9 +7,7 @@ permissions:
 on:
   push:
     branches:
-      - main
-      - dev
-      - production
+      - make-mcp-ready
 
 jobs:
   define-environment:
