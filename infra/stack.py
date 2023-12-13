@@ -365,6 +365,9 @@ class AuthStack(Stack):
                 "client_id": client.user_pool_client_id,
                 "client_secret": self._get_client_secret(client),
                 "userpool_id": self.userpool.user_pool_id,
+                "veda_client_id": client.user_pool_client_id,
+                "veda_client_secret": self._get_client_secret(client),
+                "veda_userpool_id": self.userpool.user_pool_id,
                 "scope": " ".join(scope.scope_name for scope in scopes),
             },
         )
