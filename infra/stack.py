@@ -356,17 +356,18 @@ class AuthStack(Stack):
             user_pool_client_name=f"{service_id} Service Access",
             disable_o_auth=False,
         )
-
+        # temp: we are going provide client id, secret, and user pool id values twice in the secret (once with veda_ prefix)
+        service_client_secret = self._get_client_secret(client)
         self._create_secret(
             service_id,
             {
                 "flow": "client_credentials",
                 "cognito_domain": self.domain.base_url(),
                 "client_id": client.user_pool_client_id,
-                "client_secret": self._get_client_secret(client),
+                "client_secret": service_client_secret,
                 "userpool_id": self.userpool.user_pool_id,
                 "veda_client_id": client.user_pool_client_id,
-                "veda_client_secret": self._get_client_secret(client),
+                "veda_client_secret": service_client_secret,
                 "veda_userpool_id": self.userpool.user_pool_id,
                 "scope": " ".join(scope.scope_name for scope in scopes),
             },
