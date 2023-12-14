@@ -376,7 +376,7 @@ class AuthStack(Stack):
         CfnOutput(
             self, 
             "cognito-app-secret", 
-            export_name="cognito_app_secret",
+            export_name="cognito-app-secret",
             value=cognito_app_secret.secret_name
         )
 
