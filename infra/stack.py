@@ -372,11 +372,11 @@ class AuthStack(Stack):
                 "scope": " ".join(scope.scope_name for scope in scopes),
             },
         )
-
+        stack_name = Stack.of(self).stack_name
         CfnOutput(
             self, 
             "cognito-app-secret", 
-            export_name="cognito-app-secret",
+            export_name=f"{stack_name}-cognito-app-secret",
             value=cognito_app_secret.secret_name
         )
 
