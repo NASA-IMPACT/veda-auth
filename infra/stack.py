@@ -358,7 +358,7 @@ class AuthStack(Stack):
         )
         # temp: we are going provide client id, secret, and user pool id values twice in the secret (once with veda_ prefix)
         service_client_secret = self._get_client_secret(client)
-        self._create_secret(
+        cognito_app_secret = self._create_secret(
             service_id,
             {
                 "flow": "client_credentials",
@@ -371,6 +371,13 @@ class AuthStack(Stack):
                 "veda_userpool_id": self.userpool.user_pool_id,
                 "scope": " ".join(scope.scope_name for scope in scopes),
             },
+        )
+
+        CfnOutput(
+            self, 
+            "cognito-app-secret", 
+            export_name="cognito_app_secret",
+            value=cognito_app_secret.secret_name
         )
 
         return client
