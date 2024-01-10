@@ -324,7 +324,6 @@ class AuthStack(Stack):
             user_pool_client_name=name or service_id,
             # disable_o_auth=True,
         )
-        sdk_client_secret = self._get_client_secret(client)
         cognito_sdk_secret = self._create_secret(
             service_id,
             {
@@ -332,7 +331,6 @@ class AuthStack(Stack):
                 "cognito_domain": self.domain.base_url(),
                 "client_id": client.user_pool_client_id,
                 "veda_client_id": client.user_pool_client_id,
-                "veda_client_secret": sdk_client_secret,
                 "veda_userpool_id": self.userpool.user_pool_id,
             },
         )
