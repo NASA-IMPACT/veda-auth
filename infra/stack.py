@@ -2,7 +2,7 @@ import json
 from enum import Enum
 from typing import Any, Dict, Optional, Sequence
 
-from aws_cdk import CfnOutput, RemovalPolicy, SecretValue, Stack
+from aws_cdk import Aspects, CfnOutput, RemovalPolicy, SecretValue, Stack
 from aws_cdk import aws_cognito as cognito
 from aws_cdk import aws_cognito_identitypool_alpha as cognito_id_pool
 from aws_cdk import aws_iam as iam
@@ -10,7 +10,6 @@ from aws_cdk import aws_s3 as s3
 from aws_cdk import aws_secretsmanager as secretsmanager
 from aws_cdk import custom_resources as cr
 from constructs import Construct
-from aws_cdk import Aspects
 
 from config import Config
 
@@ -336,10 +335,10 @@ class AuthStack(Stack):
         )
         stack_name = Stack.of(self).stack_name
         CfnOutput(
-            self, 
-            "cognito-sdk-secret", 
+            self,
+            f"cognito-sdk-{service_id}-secret",
             export_name=f"{stack_name}-cognito-sdk-secret",
-            value=cognito_sdk_secret.secret_name
+            value=cognito_sdk_secret.secret_name,
         )
 
         return client
@@ -382,10 +381,10 @@ class AuthStack(Stack):
         )
         stack_name = Stack.of(self).stack_name
         CfnOutput(
-            self, 
-            "cognito-app-secret", 
+            self,
+            f"cognito-app-{service_id}-secret",
             export_name=f"{stack_name}-cognito-app-secret",
-            value=cognito_app_secret.secret_name
+            value=cognito_app_secret.secret_name,
         )
 
         return client
