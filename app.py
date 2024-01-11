@@ -1,48 +1,33 @@
 #!/usr/bin/env python3
 import subprocess
 
-import aws_cdk as cdk
+from aws_cdk import App, Tags, DefaultStackSynthesizer
 
 from infra.stack import AuthStack, BucketPermissions
 
 from config import app_settings
 
-git_sha = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
-try:
-    git_tag = subprocess.check_output(["git", "describe", "--tags"]).decode().strip()
-except subprocess.CalledProcessError:
-    git_tag = "no-tag"
+app = App()
 
-tags = {
-    "Project": "veda",
-    "Owner": app_settings.owner,
-    "Client": "nasa-impact",
-    "Stack": app_settings.stage,
-    "GitCommit": git_sha,
-    "GitTag": git_tag,
-}
-
-app = cdk.App()
-stack = AuthStack(app, f"veda-auth-stack-{app_settings.stage}", app_settings)
+stack = AuthStack(
+    app, 
+    f"veda-auth-stack-{app_settings.stage}", 
+    app_settings,
+    synthesizer=DefaultStackSynthesizer(
+        qualifier=app_settings.bootstrap_qualifier
+    )
+)
 
 # Create an data managers group in user pool if data managers role is provided (legacy stack support)
-if data_managers_role_arn := app_settings.data_managers_role_arn:
+if app_settings.data_managers_group and app_settings.data_managers_role_arn:
     stack.add_cognito_group_with_existing_role(
         "veda-data-store-managers",
         "Authenticated users assume read write veda data access role",
-        role_arn=data_managers_role_arn,
+        role_arn=app_settings.data_managers_role_arn,
     )
 
-# Create Groups
+# Create Groups if Configured
 if app_settings.cognito_groups:
-    # Create a data managers group in user pool if data managers role is provided
-    if data_managers_role_arn := app_settings.data_managers_role_arn:
-        stack.add_cognito_group_with_existing_role(
-            "veda-data-store-managers",
-            "Authenticated users assume read write veda data access role",
-            role_arn=data_managers_role_arn,
-        )
-
     stack.add_cognito_group(
         "veda-staging-writers",
         "Users that have read/write-access to the VEDA store and staging datastore",
@@ -118,7 +103,22 @@ stack.add_programmatic_client("veda-sdk")
 # Frontend Clients
 # stack.add_frontend_client('veda-dashboard')
 
+git_sha = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
+try:
+    git_tag = subprocess.check_output(["git", "describe", "--tags"]).decode().strip()
+except subprocess.CalledProcessError:
+    git_tag = "no-tag"
+
+tags = {
+    "Project": "veda",
+    "Owner": app_settings.owner,
+    "Client": "nasa-impact",
+    "Stack": app_settings.stage,
+    "GitCommit": git_sha,
+    "GitTag": git_tag,
+}
+
 for key, value in tags.items():
-    cdk.Tags.of(stack).add(key, value)
+    Tags.of(stack).add(key, value)
 
 app.synth()

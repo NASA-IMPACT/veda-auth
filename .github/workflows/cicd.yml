@@ -7,9 +7,6 @@ permissions:
 on:
   push:
     branches:
-      - main
-      - dev
-      - production
       - make-mcp-ready
 
 jobs:
@@ -22,12 +19,13 @@ jobs:
         run: |
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "env_name=staging" >> $GITHUB_OUTPUT
+            echo "secret_name=veda-auth-staging" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
             echo "env_name=development" >> $GITHUB_OUTPUT
+            echo "secret_name=veda-auth-dev" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" = "refs/heads/production" ]; then
             echo "env_name=production" >> $GITHUB_OUTPUT
-          elif [ "${{ github.ref }}" = "refs/heads/make-mcp-ready" ]; then
-            echo "env_name=mcp-dev" >> $GITHUB_OUTPUT
+            echo "secret_name=veda-auth-production" >> $GITHUB_OUTPUT
           fi
       - name: Print the environment
         run: echo "The environment is ${{ steps.define_environment.outputs.env_name }}"
@@ -50,12 +48,12 @@ jobs:
           lfs: "true"
           submodules: "recursive"
         
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Configure awscli
+        uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: ${{ secrets.DEPLOYMENT_ROLE_ARN }}
-          role-session-name: "veda-auth-github-${{ needs.define-environment.outputs.env_name }}-deployment"
-          aws-region: "us-west-2"
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
 
       - name: Install node and related deps
         uses: actions/setup-node@v3
@@ -83,11 +81,11 @@ jobs:
           pip install \
             -r requirements.txt \
 
-      - name: Get relevant environment configuration from aws secrets
-        run: ./scripts/sync-env.sh veda-auth-mcp-dev
+      - name: Get environment configuration from aws secrets
+        run: ./scripts/get-env.sh  ${{ needs.define-environment.outputs.secret_name }}
 
       - name: Deploy
         env:
           AWS_DEFAULT_REGION: us-west-2
           CDK_DEFAULT_REGION: us-west-2
-        run: cdk deploy --all --require-approval never --outputs-file ${HOME}/cdk-outputs.json
+        run: cdk deploy --all --require-approval never
