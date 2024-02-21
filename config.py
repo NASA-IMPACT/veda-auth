@@ -37,6 +37,11 @@ class Config(pydantic.BaseSettings):
         description="ARN of role to be assumed by authenticated users in data managers group.",
     )
 
+    data_managers_group: bool = pydantic.Field(
+        False,
+        description="When true create data managers group (mcp-deploy refactor now requires additional control setting to enable creating this group).",
+    )
+
     oidc_provider_url: Optional[str] = pydantic.Field(
         None,
         description="URL of OIDC provider to use for CI workers.",
@@ -54,7 +59,7 @@ class Config(pydantic.BaseSettings):
 
     # Since MCP doesn't allow creating identity pools, setting this as optional
     cognito_groups: Optional[bool] = pydantic.Field(
-        True,
+        False,
         description="whether to create cognito groups with bucket access permissions",
     )
 
@@ -65,6 +70,11 @@ class Config(pydantic.BaseSettings):
 
     user_pool_id: Optional[str] = pydantic.Field(
         "", description="The user pool id to use for user management"
+    )
+
+    bootstrap_qualifier: Optional[str] = pydantic.Field(
+        None,
+        description="Custom bootstrap qualifier override if not using a default installation of AWS CDK Toolkit to synthesize app.",
     )
 
 

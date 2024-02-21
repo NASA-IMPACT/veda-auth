@@ -12,8 +12,6 @@ inputs:
     required: true
     type: string
 
-
-
 runs:
   using: "composite"
   steps:
@@ -57,6 +55,7 @@ runs:
         else
         python ${{ inputs.script_path }} --secret-id ${{ inputs.env_aws_secret_name }}
         fi
+
 
     - name: Deploy
       id: deploy_auth_stack

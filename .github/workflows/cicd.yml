@@ -21,8 +21,10 @@ jobs:
         run: |
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "env_name=staging" >> $GITHUB_OUTPUT
+            echo "secret_name=veda-auth-staging" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
             echo "env_name=development" >> $GITHUB_OUTPUT
+            echo "secret_name=veda-auth-dev" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" = "refs/heads/production" ]; then
             echo "env_name=production" >> $GITHUB_OUTPUT
           fi
@@ -47,8 +49,8 @@ jobs:
           lfs: "true"
           submodules: "recursive"
         
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Configure awscli
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.DEPLOYMENT_ROLE_ARN }}
           role-session-name: "ghgc-auth-github-${{ needs.define-environment.outputs.env_name }}-deployment"
