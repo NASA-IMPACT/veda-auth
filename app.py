@@ -99,7 +99,7 @@ if oidc_thumbprint and oidc_provider_url:
 
 # Programmatic Clients
 client = stack.add_programmatic_client(f"{app_settings.app_name}-{app_settings.stage}-veda-sdk")
-cdk.CfnOutput(
+aws_cdk.CfnOutput(
     stack,
     "client_id",
     export_name=f"{app_settings.app_name}-{app_settings.stage}-client-id",
