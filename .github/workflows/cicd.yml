@@ -53,7 +53,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.DEPLOYMENT_ROLE_ARN }}
-          role-session-name: "ghgc-auth-github-${{ needs.define-environment.outputs.env_name }}-deployment"
+          role-session-name: "veda-auth-github-${{ needs.define-environment.outputs.env_name }}-deployment"
           aws-region: "us-west-2"
 
       - name: Run deployment
