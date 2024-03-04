@@ -13,7 +13,6 @@ from constructs import Construct
 
 from config import Config
 
-
 class BucketPermissions(str, Enum):
     read_only = "r"
     read_write = "wr"
@@ -44,9 +43,13 @@ class AuthStack(Stack):
         else:
             self.userpool = self._create_userpool()
         self.domain = self._add_domain(self.userpool)
-
         stack_name = Stack.of(self).stack_name
-
+        CfnOutput(
+            self,
+            "userpool_id",
+            export_name=f"{stack_name}-userpool-id",
+            value=self.userpool.user_pool_id,
+        )
         if app_settings.cognito_groups or app_settings.data_managers_group:
             self._group_precedence = 0
 
@@ -224,12 +227,6 @@ class AuthStack(Stack):
             secret_string_value=SecretValue.unsafe_plain_text(json.dumps(secret_dict)),
         )
 
-        CfnOutput(
-            self,
-            f"{service_id}-secret-output",
-            export_name=f"{stack_name}-{service_id}-secret",
-            value=secret.secret_name,
-        )
         CfnOutput(
             self,
             f"{service_id}-secret-arn-output",

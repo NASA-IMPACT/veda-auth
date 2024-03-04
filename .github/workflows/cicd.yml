@@ -7,7 +7,9 @@ permissions:
 on:
   push:
     branches:
-      - make-mcp-ready
+      - main
+      - dev
+      - production
 
 jobs:
   define-environment:
@@ -25,7 +27,6 @@ jobs:
             echo "secret_name=veda-auth-dev" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" = "refs/heads/production" ]; then
             echo "env_name=production" >> $GITHUB_OUTPUT
-            echo "secret_name=veda-auth-production" >> $GITHUB_OUTPUT
           fi
       - name: Print the environment
         run: echo "The environment is ${{ steps.define_environment.outputs.env_name }}"
@@ -51,41 +52,11 @@ jobs:
       - name: Configure awscli
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
+          role-to-assume: ${{ secrets.DEPLOYMENT_ROLE_ARN }}
+          role-session-name: "veda-auth-github-${{ needs.define-environment.outputs.env_name }}-deployment"
+          aws-region: "us-west-2"
 
-      - name: Install node and related deps
-        uses: actions/setup-node@v3
+      - name: Run deployment
+        uses: "./.github/actions/cdk-deploy"
         with:
-          node-version: 17.3.0
-
-      - uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-
-      - name: Install AWS CDK
-        shell: bash
-        run: npm install -g aws-cdk@2
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-          cache: "pip"
-          cache-dependency-path: requirements.txt
-
-      - name: Install python dependencies
-        run: |
-          pip install \
-            -r requirements.txt \
-
-      - name: Get environment configuration from aws secrets
-        run: ./scripts/get-env.sh  ${{ needs.define-environment.outputs.secret_name }}
-
-      - name: Deploy
-        env:
-          AWS_DEFAULT_REGION: us-west-2
-          CDK_DEFAULT_REGION: us-west-2
-        run: cdk deploy --all --require-approval never
+          env_aws_secret_name: ${{ secrets.ENV_AWS_SECRET_NAME }}
