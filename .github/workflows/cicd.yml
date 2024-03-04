@@ -22,7 +22,7 @@ jobs:
             echo "env_name=staging" >> $GITHUB_OUTPUT
             echo "secret_name=veda-auth-uah-env" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
-            echo "env_name=development" >> $GITHUB_OUTPUT
+            echo "env_name=dev" >> $GITHUB_OUTPUT
             echo "secret_name=veda-auth-dev-env" >> $GITHUB_OUTPUT
           fi
       - name: Print the environment
@@ -50,7 +50,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 17
+          node-version: 20
 
       - name: Configure awscli
         uses: aws-actions/configure-aws-credentials@v3
