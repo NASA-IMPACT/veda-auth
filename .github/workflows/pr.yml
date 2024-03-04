@@ -43,7 +43,12 @@ jobs:
 
       - name: Get environment configuration for target branch
         run: |
-          ./scripts/get-env.sh "veda-auth-uah-env"
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            ./scripts/get-env.sh "veda-auth-uah-env"
+          elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+            ./scripts/get-env.sh "veda-auth-dev-env"
+          fi
+
       - name: Pre deployment CDK diff
         run: |
           echo $STAGE
