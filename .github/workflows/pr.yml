@@ -19,9 +19,10 @@ jobs:
           fi
       - name: Print the environment
         run: echo "The environment is ${{ steps.define_environment.outputs.env_name }}"
-      outputs:
-        env_name: ${{ steps.define_environment.outputs.env_name }}
-        secret_name: ${{ steps.define_environment.outputs.secret_name }}
+        
+    outputs:
+      env_name: ${{ steps.define_environment.outputs.env_name }}
+      secret_name: ${{ steps.define_environment.outputs.secret_name }}
     
 
   predeploy:
