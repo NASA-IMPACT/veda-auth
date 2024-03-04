@@ -1,4 +1,6 @@
 {
   "app": "python3 app.py",
-  "@aws-cdk/customresources:installLatestAwsSdkDefault": false
+  "context": {
+    "@aws-cdk/customresources:installLatestAwsSdkDefault": false
+  }
 }
