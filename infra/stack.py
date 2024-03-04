@@ -330,13 +330,6 @@ class AuthStack(Stack):
                 "veda_userpool_id": self.userpool.user_pool_id,
             },
         )
-        stack_name = Stack.of(self).stack_name
-        CfnOutput(
-            self,
-            f"{service_id}-secret",
-            export_name=f"{service_id}-secret",
-            value=cognito_sdk_secret.secret_name,
-        )
 
         return client
 
