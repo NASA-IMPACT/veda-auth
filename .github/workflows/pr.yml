@@ -3,7 +3,30 @@ name: Pull Request - Preview CDK Diff
 on: [pull_request]
 
 jobs:
+  define-environment:
+    name: Set ✨ environment ✨ based on the branch 🌳
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set the environment
+        id: define_environment
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "env_name=staging" >> $GITHUB_OUTPUT
+            echo "secret_name=veda-auth-uah-env" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+            echo "env_name=development" >> $GITHUB_OUTPUT
+            echo "secret_name=veda-auth-dev-env" >> $GITHUB_OUTPUT
+          fi
+      - name: Print the environment
+        run: echo "The environment is ${{ steps.define_environment.outputs.env_name }}"
+      outputs:
+        env_name: ${{ steps.define_environment.outputs.env_name }}
+        secret_name: ${{ steps.define_environment.outputs.secret_name }}
+    
+
   predeploy:
+    name: Pre-deploy cdk diff for ${{ needs.define-environment.outputs.env_name }} 🚀
+    needs: [define-environment]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -43,11 +66,7 @@ jobs:
 
       - name: Get environment configuration for target branch
         run: |
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            ./scripts/get-env.sh "veda-auth-uah-env"
-          elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
-            ./scripts/get-env.sh "veda-auth-dev-env"
-          fi
+          ./scripts/get-env.sh ${{ needs.define-environment.outputs.secret_name }}
 
       - name: Pre deployment CDK diff
         run: |
