@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - dev
+      - fix/ci-for-dev
 
 jobs:
   define-environment:
@@ -22,6 +23,9 @@ jobs:
             echo "env_name=staging" >> $GITHUB_OUTPUT
             echo "secret_name=veda-auth-uah-env" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+            echo "env_name=development" >> $GITHUB_OUTPUT
+            echo "secret_name=veda-auth-dev-env" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/fix/ci-for-dev" ]; then
             echo "env_name=development" >> $GITHUB_OUTPUT
             echo "secret_name=veda-auth-dev-env" >> $GITHUB_OUTPUT
           fi
