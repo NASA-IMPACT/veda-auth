@@ -59,7 +59,7 @@ class AuthStack(Stack):
                 )
             else:
                 auth_provider_client = self.add_programmatic_client(
-                    f"{stack_name}-identity-provider",
+                    "identity-provider",
                     name="Identity Pool Authentication Provider",
                 )
                 if app_settings.data_managers_role_arn:
@@ -332,8 +332,8 @@ class AuthStack(Stack):
         stack_name = Stack.of(self).stack_name
         CfnOutput(
             self,
-            f"cognito-sdk-{service_id}-secret",
-            export_name=f"{stack_name}-{service_id}-cognito-sdk-secret",
+            f"{service_id}-secret-id",
+            export_name=f"{stack_name}-{service_id}-secret-id",
             value=f"{stack_name}/{service_id}",
         )
 
@@ -375,8 +375,8 @@ class AuthStack(Stack):
         stack_name = Stack.of(self).stack_name
         CfnOutput(
             self,
-            f"cognito-app-{service_id}-secret",
-            export_name=f"{stack_name}-{service_id}-cognito-app-secret",
+            f"{service_id}-secret-id",
+            export_name=f"{stack_name}-{service_id}-secret-id",
             value=f"{stack_name}/{service_id}",
         )
 

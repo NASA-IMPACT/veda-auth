@@ -80,7 +80,7 @@ stac_registry_scopes = stack.add_resource_server(
 # In this case, we want this client to be able to only register new STAC ingestions in
 # the STAC ingestion registry service.
 stack.add_service_client(
-    "veda-workflows",
+    "workflows-client",
     scopes=[
         stac_registry_scopes["stac:register"],
     ],
@@ -98,7 +98,7 @@ if oidc_thumbprint and oidc_provider_url:
     )
 
 # Programmatic Clients
-client = stack.add_programmatic_client(f"{app_settings.app_name}-{app_settings.stage}-veda-sdk")
+client = stack.add_programmatic_client("programmatic-client")
 CfnOutput(
     stack,
     "client_id",
