@@ -59,7 +59,7 @@ class AuthStack(Stack):
                 )
             else:
                 auth_provider_client = self.add_programmatic_client(
-                    "cognito-identity-pool-auth-provider",
+                    f"{stack_name}-identity-provider",
                     name="Identity Pool Authentication Provider",
                 )
                 if app_settings.data_managers_role_arn:
@@ -320,14 +320,13 @@ class AuthStack(Stack):
             user_pool_client_name=name or service_id,
             # disable_o_auth=True,
         )
-        cognito_sdk_secret = self._create_secret(
+        self._create_secret(
             service_id,
             {
                 "flow": "user_password",
                 "cognito_domain": self.domain.base_url(),
                 "client_id": client.user_pool_client_id,
-                "veda_client_id": client.user_pool_client_id,
-                "veda_userpool_id": self.userpool.user_pool_id,
+                "userpool_id": self.userpool.user_pool_id,
             },
         )
         stack_name = Stack.of(self).stack_name
@@ -335,7 +334,7 @@ class AuthStack(Stack):
             self,
             f"cognito-sdk-{service_id}-secret",
             export_name=f"{stack_name}-cognito-sdk-secret",
-            value=cognito_sdk_secret.secret_name,
+            value=f"{stack_name}/{service_id}",
         )
 
         return client
@@ -360,28 +359,25 @@ class AuthStack(Stack):
             user_pool_client_name=f"{service_id} Service Access",
             disable_o_auth=False,
         )
-        # temp: we are going provide client id, secret, and user pool id values twice in the secret (once with veda_ prefix)
-        service_client_secret = self._get_client_secret(client)
-        cognito_app_secret = self._create_secret(
+
+        self._create_secret(
             service_id,
             {
                 "flow": "client_credentials",
                 "cognito_domain": self.domain.base_url(),
                 "client_id": client.user_pool_client_id,
-                "client_secret": service_client_secret,
+                "client_secret": self._get_client_secret(client),
                 "userpool_id": self.userpool.user_pool_id,
-                "veda_client_id": client.user_pool_client_id,
-                "veda_client_secret": service_client_secret,
-                "veda_userpool_id": self.userpool.user_pool_id,
                 "scope": " ".join(scope.scope_name for scope in scopes),
             },
         )
+
         stack_name = Stack.of(self).stack_name
         CfnOutput(
             self,
             f"cognito-app-{service_id}-secret",
             export_name=f"{stack_name}-cognito-app-secret",
-            value=cognito_app_secret.secret_name,
+            value=f"{stack_name}/{service_id}",
         )
 
         return client
