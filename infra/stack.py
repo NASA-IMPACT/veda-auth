@@ -333,7 +333,7 @@ class AuthStack(Stack):
         CfnOutput(
             self,
             f"cognito-sdk-{service_id}-secret",
-            export_name=f"{stack_name}-cognito-sdk-secret",
+            export_name=f"{stack_name}-{service_id}-cognito-sdk-secret",
             value=f"{stack_name}/{service_id}",
         )
 
@@ -376,7 +376,7 @@ class AuthStack(Stack):
         CfnOutput(
             self,
             f"cognito-app-{service_id}-secret",
-            export_name=f"{stack_name}-cognito-app-secret",
+            export_name=f"{stack_name}-{service_id}-cognito-app-secret",
             value=f"{stack_name}/{service_id}",
         )
 
