@@ -1,5 +1,5 @@
-aws-cdk-lib==2.35.0
-aws_cdk.aws_cognito_identitypool_alpha==2.35.0a0
+aws-cdk-lib==2.112.0
+aws_cdk.aws_cognito_identitypool_alpha>=2.112.0a0
 constructs>=10.0.0,<11.0.0
 pydantic==1.9.1
 black==22.3.0

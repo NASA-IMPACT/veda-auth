@@ -16,9 +16,9 @@ runs:
   using: "composite"
   steps:
     - name: Install node and related deps
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: 17.3.0
+        node-version: 20
 
     - uses: actions/cache@v3
       with:
@@ -30,7 +30,7 @@ runs:
       run: npm install -g aws-cdk@2
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: "3.10"
         cache: "pip"
@@ -49,7 +49,13 @@ runs:
       working-directory: ${{ inputs.dir }}
       env:
         AWS_DEFAULT_REGION: us-west-2
-      run: ./scripts/get-env.sh ${{ inputs.env_aws_secret_name }}
+      run: |
+        if [[ -z "${{ inputs.script_path }}" ]]; then
+        ./scripts/sync-env.sh ${{ inputs.env_aws_secret_name }}
+        else
+        python ${{ inputs.script_path }} --secret-id ${{ inputs.env_aws_secret_name }}
+        fi
+
 
     - name: Deploy
       id: deploy_auth_stack
