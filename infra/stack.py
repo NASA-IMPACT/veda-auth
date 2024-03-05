@@ -320,7 +320,7 @@ class AuthStack(Stack):
             user_pool_client_name=name or service_id,
             # disable_o_auth=True,
         )
-        cognito_sdk_secret = self._create_secret(
+        self._create_secret(
             service_id,
             {
                 "flow": "user_password",
@@ -329,6 +329,13 @@ class AuthStack(Stack):
                 "veda_client_id": client.user_pool_client_id,
                 "veda_userpool_id": self.userpool.user_pool_id,
             },
+        )
+        stack_name = Stack.of(self).stack_name
+        CfnOutput(
+            self,
+            f"cognito-sdk-{service_id}-secret",
+            export_name=f"{stack_name}-cognito-sdk-secret",
+            value=f"{stack_name}/{service_id}",
         )
 
         return client
