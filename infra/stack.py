@@ -326,8 +326,7 @@ class AuthStack(Stack):
                 "flow": "user_password",
                 "cognito_domain": self.domain.base_url(),
                 "client_id": client.user_pool_client_id,
-                "veda_client_id": client.user_pool_client_id,
-                "veda_userpool_id": self.userpool.user_pool_id,
+                "userpool_id": self.userpool.user_pool_id,
             },
         )
         stack_name = Stack.of(self).stack_name
