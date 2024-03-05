@@ -354,6 +354,26 @@ class AuthStack(Stack):
             disable_o_auth=False,
         )
 
+        self._create_secret(
+            service_id,
+            {
+                "flow": "client_credentials",
+                "cognito_domain": self.domain.base_url(),
+                "client_id": client.user_pool_client_id,
+                "client_secret": self._get_client_secret(client),
+                "userpool_id": self.userpool.user_pool_id,
+                "scope": " ".join(scope.scope_name for scope in scopes),
+            },
+        )
+
+        stack_name = Stack.of(self).stack_name
+        CfnOutput(
+            self,
+            f"cognito-app-{service_id}-secret",
+            export_name=f"{stack_name}-cognito-app-secret",
+            value=f"{stack_name}/{service_id}",
+        )
+
         return client
 
     @property
