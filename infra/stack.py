@@ -59,7 +59,7 @@ class AuthStack(Stack):
                 )
             else:
                 auth_provider_client = self.add_programmatic_client(
-                    f"{stack_name}-identity-provider",
+                    "identity-provider",
                     name="Identity Pool Authentication Provider",
                 )
                 if app_settings.data_managers_role_arn:
@@ -320,6 +320,8 @@ class AuthStack(Stack):
             user_pool_client_name=name or service_id,
             # disable_o_auth=True,
         )
+
+        region = Stack.of(self).region
         self._create_secret(
             service_id,
             {
@@ -327,13 +329,14 @@ class AuthStack(Stack):
                 "cognito_domain": self.domain.base_url(),
                 "client_id": client.user_pool_client_id,
                 "userpool_id": self.userpool.user_pool_id,
+                "aws_region": region,
             },
         )
         stack_name = Stack.of(self).stack_name
         CfnOutput(
             self,
-            f"cognito-sdk-{service_id}-secret",
-            export_name=f"{stack_name}-cognito-sdk-secret",
+            f"{service_id}-secret-id",
+            export_name=f"{stack_name}-{service_id}-secret-id",
             value=f"{stack_name}/{service_id}",
         )
 
@@ -360,6 +363,7 @@ class AuthStack(Stack):
             disable_o_auth=False,
         )
 
+        region = Stack.of(self).region
         self._create_secret(
             service_id,
             {
@@ -369,14 +373,15 @@ class AuthStack(Stack):
                 "client_secret": self._get_client_secret(client),
                 "userpool_id": self.userpool.user_pool_id,
                 "scope": " ".join(scope.scope_name for scope in scopes),
+                "aws_region": region,
             },
         )
 
         stack_name = Stack.of(self).stack_name
         CfnOutput(
             self,
-            f"cognito-app-{service_id}-secret",
-            export_name=f"{stack_name}-cognito-app-secret",
+            f"{service_id}-secret-id",
+            export_name=f"{stack_name}-{service_id}-secret-id",
             value=f"{stack_name}/{service_id}",
         )
 
