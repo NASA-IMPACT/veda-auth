@@ -20,7 +20,7 @@ jobs:
         run: |
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "env_name=staging" >> $GITHUB_OUTPUT
-            echo "secret_name=veda-auth-uah-env" >> $GITHUB_OUTPUT
+            echo "secret_name=veda-auth-staging-env" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
             echo "env_name=dev" >> $GITHUB_OUTPUT
             echo "secret_name=veda-auth-dev-env" >> $GITHUB_OUTPUT
