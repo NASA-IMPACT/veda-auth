@@ -98,7 +98,9 @@ if oidc_thumbprint and oidc_provider_url:
     )
 
 # Programmatic Clients
-client = stack.add_programmatic_client("programmatic-client")
+# Note add_cognito_app_secret_export forces an export named <stack-name>-cognito-app-secret 
+# but defaults to False to avoid duplicate export names for mulitple clients
+client = stack.add_programmatic_client("programmatic-client", add_congito_app_secret_export=True)
 CfnOutput(
     stack,
     "client_id",

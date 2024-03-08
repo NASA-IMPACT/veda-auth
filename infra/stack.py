@@ -312,6 +312,7 @@ class AuthStack(Stack):
         self,
         service_id: str,
         name: Optional[str] = None,
+        add_congito_app_secret_export: Optional[bool] = False,
     ) -> cognito.UserPoolClient:
         client = self.userpool.add_client(
             service_id,
@@ -337,6 +338,16 @@ class AuthStack(Stack):
             self,
             f"{service_id}-secret-id",
             export_name=f"{stack_name}-{service_id}-secret-id",
+            value=f"{stack_name}/{service_id}",
+        )
+
+        # Temporarily support a downstream application looking for this exact export name, 
+        # this will fail if multiple clients are configured with this flag set to true
+        if add_congito_app_secret_export:
+            CfnOutput(
+            self,
+            f"{service_id}-duplicate-export-cognito-app-secret",
+            export_name=f"{stack_name}-cognito_app_secret",
             value=f"{stack_name}/{service_id}",
         )
 
