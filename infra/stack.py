@@ -347,7 +347,7 @@ class AuthStack(Stack):
             CfnOutput(
             self,
             f"{service_id}-duplicate-export-cognito-app-secret",
-            export_name=f"{stack_name}-cognito_app_secret",
+            export_name=f"{stack_name}-cognito-app-secret",
             value=f"{stack_name}/{service_id}",
         )
 
