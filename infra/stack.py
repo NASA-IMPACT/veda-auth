@@ -177,7 +177,7 @@ class AuthStack(Stack):
         CfnOutput(
             self,
             "cognito-domain",
-            export_name=f"{stack_name}-cognito_domain",
+            export_name=f"{stack_name}-cognito-domain",
             value=domain.base_url(),
         )
 
