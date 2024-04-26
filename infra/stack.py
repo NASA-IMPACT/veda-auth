@@ -174,6 +174,13 @@ class AuthStack(Stack):
             value=domain.base_url(),
         )
 
+        CfnOutput(
+            self,
+            "cognito-domain",
+            export_name=f"{stack_name}-cognito_domain",
+            value=domain.base_url(),
+        )
+
         return domain
 
     def _get_client_secret(
