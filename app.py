@@ -106,6 +106,15 @@ CfnOutput(
     value=client.user_pool_client_id,
 )
 
+# Veda Ingest UI Client
+client = stack.add_programmatic_client("veda-ingest-ui")
+CfnOutput(
+    stack,
+    "client_id",
+    export_name=f"{app_settings.app_name}-{app_settings.stage}-client-id",
+    value=client.user_pool_client_id,
+)
+
 # Frontend Clients
 # stack.add_frontend_client('veda-dashboard')
 
