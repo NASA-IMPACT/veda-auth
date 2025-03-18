@@ -16,11 +16,11 @@ runs:
   using: "composite"
   steps:
     - name: Install node and related deps
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e4 #v4.3.0
       with:
         node-version: 20
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@e12d46a63a90f2fae62d114769bbf2a179198b5c #v3.3.3
       with:
         path: ~/.npm
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
@@ -30,7 +30,7 @@ runs:
       run: npm install -g aws-cdk@2
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
       with:
         python-version: "3.10"
         cache: "pip"
