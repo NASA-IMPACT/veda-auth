@@ -28,7 +28,6 @@ jobs:
       env_name: ${{ steps.define_environment.outputs.env_name }}
       secret_name: ${{ steps.define_environment.outputs.secret_name }}
 
-
   predeploy:
     name: Pre-deploy cdk diff for ${{ needs.define-environment.outputs.env_name }} 🚀
     needs: [define-environment]
@@ -52,7 +51,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
 
-      - uses: actions/cache@e12d46a63a90f2fae62d114769bbf2a179198b5c #v3.3.3
+      - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf #v4.2.2
         with:
           path: ~/.npm
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
@@ -60,14 +59,14 @@ jobs:
       - name: Install CDK
         run: npm install -g aws-cdk@2
 
-      - uses: actions/cache@e12d46a63a90f2fae62d114769bbf2a179198b5c #v3.3.3
+      - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf #v4.2.2
         with:
           path: ${{ env.pythonLocation }}
-          key:  ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
 
       - name: Install python dependencies
         run: |
-            pip install -r requirements.txt
+          pip install -r requirements.txt
 
       - name: Get environment configuration for target branch
         run: |

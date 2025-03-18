@@ -20,7 +20,7 @@ runs:
       with:
         node-version: 20
 
-    - uses: actions/cache@e12d46a63a90f2fae62d114769bbf2a179198b5c #v3.3.3
+    - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf #v4.2.2
       with:
         path: ~/.npm
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
@@ -55,7 +55,6 @@ runs:
         else
         python ${{ inputs.script_path }} --secret-id ${{ inputs.env_aws_secret_name }}
         fi
-
 
     - name: Deploy
       id: deploy_auth_stack
