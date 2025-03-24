@@ -41,45 +41,45 @@ jobs:
     concurrency: ${{ needs.define-environment.outputs.env_name }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 #v3.6.0
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@b64ffcaf5b410884ad320a9cfac8866006a109aa #v4.8.0
         with:
           python-version: '3.9'
-      
+
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@1a4442cacd436585916779262731d5b162bc6ec7 #v3.8.2
         with:
           node-version: 20
 
       - name: Configure awscli
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@50ac8dd1e1b10d09dac7b8727528b91bed831ac0 #v3.0.2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
-      
-      - uses: actions/cache@v3
+
+      - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf #v4.2.2
         with:
           path: ~/.npm
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install CDK
         run: npm install -g aws-cdk@2
-        
-      - uses: actions/cache@v3
+
+      - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf #v4.2.2
         with:
           path: ${{ env.pythonLocation }}
-          key:  ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
-          
+          key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+
       - name: Install python dependencies
         run: |
           pip install -r requirements.txt
-          
+
       - name: Get environment configuration for target branch
         run: |
           ./scripts/get-env.sh ${{ needs.define-environment.outputs.secret_name }}
-          
+
       - name: Deploy
         run: |
           echo $STAGE
